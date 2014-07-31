@@ -24,16 +24,16 @@ class Test {
   }
 
   Test.fromConfig(Map configData) {
-    if(configData.containsKey('contentShellOptions' && configData['contentShellOptions'] != null)) {
+    if(configData.containsKey('contentShellOptions') && configData['contentShellOptions'] != null) {
       contentShellOptions = configData['contentShellOptions'];
     }
-    if(configData.containsKey('doSkipWithContentShell' && configData['doSkipWithContentShell'] != null)) {
+    if(configData.containsKey('doSkipWithContentShell') && configData['doSkipWithContentShell'] != null) {
       doSkipWithContentShell = configData['doSkipWithContentShell'];
     }
-    if(configData.containsKey('doSkipWithPubServe' && configData['doSkipWithPubServe'] != null)) {
+    if(configData.containsKey('doSkipWithPubServe') && configData['doSkipWithPubServe'] != null) {
       doSkipWithPubServe = configData['doSkipWithPubServe'];
     }
-    if(configData.containsKey('doSkipWithoutPubServe' && configData['doSkipWithoutPubServe'] != null)) {
+    if(configData.containsKey('doSkipWithoutPubServe') && configData['doSkipWithoutPubServe'] != null) {
       doSkipWithPubServe = configData['doSkipWithoutPubServe'];
     }
   }
@@ -113,8 +113,8 @@ void processArgs(List<String> args) {
   try {
     var ar = parser.parse(args);
     pubServePort = int.parse(ar['port']);
-    isPubServe = ar['pub-serve'];
-    if(ar['help']) {
+    isPubServe = ar['pub-serve'] == 'true';
+    if(ar['help'] == 'true') {
       print(parser.getUsage());
       io.exit(0);
     }
@@ -139,8 +139,8 @@ void processArgs(List<String> args) {
         }
       });
     }
-  } catch (e) {
-    print('Parsing args threw: ${e}');
+  } catch (e, s) {
+    print('Parsing args threw: ${e}\n\n${s}');
     print(parser.getUsage());
     io.exit(1);
   }
