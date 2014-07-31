@@ -112,7 +112,7 @@ void processArgs(List<String> args) {
 
   try {
     var ar = parser.parse(args);
-    pubServePort = ar['port'];
+    pubServePort = int.parse(ar['port']);
     isPubServe = ar['pub-serve'];
     if(ar['help']) {
       print(parser.getUsage());
