@@ -112,32 +112,40 @@ void processArgs(List<String> args) {
 
   try {
     var ar = parser.parse(args);
-    pubServePort = int.parse(ar['port']);
-    isPubServe = ar['pub-serve'] == 'true';
+
     if(ar['help'] == 'true') {
       print(parser.getUsage());
       io.exit(0);
     }
+
+    pubServePort = int.parse(ar['port']);
+    isPubServe = ar['pub-serve'] == 'true';
+
     if(ar.rest.length != 0) {
       print(parser.getUsage());
       io.exit(1);
     }
+
+    print('Using config file "${ar['config-file']}".');
     var config = new io.File(ar['config-file']).readAsStringSync();
     var configData = JSON.decode(config);
     configData.keys.forEach((testName) {
       tests[testName] = new Test.fromConfig(configData[testName]);
     });
+
     if(ar['test-name'] != null) {
       List<String> testNames = ar['test-name'];
-      tests.keys.forEach((testName) {
-        if (testNames.contains(testName)) {
-          tests[testName].doSkipWithContentShell = false;
-          tests[testName].doSkipWithPubServe = false;
-          tests[testName].doSkipWithoutPubServe = false;
-        } else {
-          tests[testName].doSkipWithContentShell = true;
-        }
-      });
+      if(testNames.length > 0) {
+        tests.keys.forEach((testName) {
+          if (testNames.contains(testName)) {
+            tests[testName].doSkipWithContentShell = false;
+            tests[testName].doSkipWithPubServe = false;
+            tests[testName].doSkipWithoutPubServe = false;
+          } else {
+            tests[testName].doSkipWithContentShell = true;
+          }
+        });
+      }
     }
   } catch (e, s) {
     print('Parsing args threw: ${e}\n\n${s}');
@@ -172,7 +180,7 @@ int printResults() {
     io.stderr.writeln('FAIL - Test Suite: FAIL $failSuitCount PASS ${tests.length - failSuitCount - skippedSuitesCount} (of ${tests.length}) SKIP ${skippedSuitesCount}, Test Case: FAIL $failCount PASS $successCount (of ${failCount + successCount})');
     return 1;
   } else {
-    print('PASS - Suite: ${tests.length}, Test cases: $successCount, Suites skipped: ${skippedSuitesCount}');
+    print('PASS - Suite: ${tests.length - skippedSuitesCount}, Test cases: $successCount, Suites skipped: ${skippedSuitesCount}');
     return 0;
   }
 }
