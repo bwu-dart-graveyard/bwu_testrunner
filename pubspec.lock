@@ -9,3 +9,7 @@ packages:
     description: collection
     source: hosted
     version: "0.9.4"
+  path:
+    description: path
+    source: hosted
+    version: "1.2.2"

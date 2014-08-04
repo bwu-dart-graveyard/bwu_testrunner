@@ -345,21 +345,21 @@ int printResults() {
     switch (testType) {
       case TestType.FILE:
         if (runFileTests) {
-          print('\n--------------------- File tests ---------------------');
+          print('\n------------------- File tests --------------------');
           tests.keys.forEach(
               (String test) => print(tests[test].results[TestType.FILE]));
         } else {
-          print('\n-------------------- File tests skipped --------------------');
+          print('\n--------------- File tests skipped ----------------');
         }
         break;
 
       case TestType.PUB_SERVE:
         if (runPubServeTests) {
-          print('\n-------------------- Pub serve tests --------------------');
+          print('\n----------------- Pub serve tests -----------------');
           tests.keys.forEach(
               (String test) => print(tests[test].results[TestType.FILE]));
         } else {
-          print('\n-------------------- Pub serve tests skipped --------------------');
+          print('\n------------- Pub serve tests skipped -------------');
         }
         break;
 
