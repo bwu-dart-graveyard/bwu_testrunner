@@ -1,9 +1,15 @@
 #!/bin/dart
+
+library bwu_testrunner.run;
+
 import 'dart:async' as async;
 import 'dart:io' as io;
 import 'dart:convert' show JSON;
 import 'dart:convert' show UTF8;
 import 'package:args/args.dart' show ArgParser, ArgResults;
+import 'package:path/path.dart' as path;
+
+part 'install_content_shell.dart';
 
 // A list of possible options for Chromium can be found at http://peter.sh/experiments/chromium-command-line-switches/
 
@@ -15,12 +21,14 @@ class Test {
   bool doSkipWithPubServe = false;
   bool doSkipWithoutPubServe = false;
   List<String> contentShellOptions = [];
+  String path = '';
 
-  Test({this.contentShellOptions, this.doSkipWithContentShell, this.doSkipWithPubServe, this.doSkipWithoutPubServe}) {
+  Test({this.contentShellOptions, this.doSkipWithContentShell, this.doSkipWithPubServe, this.doSkipWithoutPubServe, this.path}) {
     assert(contentShellOptions != null);
     assert(doSkipWithContentShell != null);
     assert(doSkipWithPubServe != null);
     assert(doSkipWithoutPubServe != null);
+    assert(path != null);
   }
 
   Test.fromConfig(Map configData) {
@@ -35,6 +43,12 @@ class Test {
     }
     if(configData.containsKey('doSkipWithoutPubServe') && configData['doSkipWithoutPubServe'] != null) {
       doSkipWithPubServe = configData['doSkipWithoutPubServe'];
+    }
+    if(configData.containsKey('path') && configData['path'] != null) {
+      path = configData['path'];
+      if(!path.endsWith('/')) {
+        path += '/';
+      }
     }
   }
 }
@@ -64,18 +78,29 @@ class TestResult {
 
 bool isPubServe = false;
 int pubServePort;
+String dartSdkPath;
+bool isInstallContentShell = false;
+io.Directory workingDir;
+String configFilePath;
 
 void main(List<String> args) {
-  print('current working directory: ${io.Directory.current}');
-  var ps;
+  workingDir = io.Directory.current;
+  print('current working directory: ${workingDir}');
+
   processArgs(args);
-  if(isPubServe) {
-    ps = runPubServe();
-  } else {
-    ps = new async.Future.value();
+  loadConfigFile();
+
+  var future = new async.Future.value();
+
+  if(isInstallContentShell) {
+    future = installContentShell();
   }
 
-  ps.then((io.Process pubServe) {
+  if(isPubServe) {
+    future = future.then((e) => runPubServe());
+  }
+
+  future.then((io.Process pubServe) {
     if(isPubServe) {
       pubServe.exitCode.then((ec) {
         print('pub serve ended with exit code $ec');
@@ -94,47 +119,60 @@ void main(List<String> args) {
 }
 
 void processArgs(List<String> args) {
+  const PORT_OPTION = 'port';
+  const CONFIG_FILE_OPTION = 'config-file';
+  const TEST_NAME_OPTION = 'test-name';
+  const DART_SDK_PATH_OPTION = 'dart-sdk-path';
+  const PACKAGE_ROOT_OPTION = 'package-root';
+  const USE_PUB_SERVE_FLAG = 'pub-serve';
+  const HELP_FLAG = 'help';
+  const INSTALL_CONTENTSHELL_FLAG = 'install-contentshell';
+
   var parser = new ArgParser();
 
-  parser.addOption('port', defaultsTo: '18080', abbr: 'p', help: 'The port "pub serve" should serve the content on.',
-  allowMultiple: false, hide: false);
+  parser.addOption(PORT_OPTION, defaultsTo: '18080', abbr: 'p',
+      help: 'The port "pub serve" should serve the content on.');
 
-  parser.addOption('config-file', defaultsTo: 'run_config.json', abbr: 'c', help: 'The JSON file containing a list of tests to run and optional configuration details for each test.',
-  allowMultiple: false, hide: false);
+  parser.addOption(CONFIG_FILE_OPTION, defaultsTo: 'test/run_config.json', abbr: 'c',
+      help: 'The JSON file containing a list of tests to run and optional configuration details for each test.');
 
-  parser.addOption('test-name', abbr: 't', help: 'When a test name is provided only this test is run.',
-  allowMultiple: true, hide: false);
+  parser.addOption(TEST_NAME_OPTION, abbr: 't', allowMultiple: true,
+      help: 'When a test name is provided only this test is run.');
 
-  parser.addFlag('pub-serve', defaultsTo: false, abbr: 's',
-  help: 'Whether "pub serve" should be invoked to serve the tests.', negatable: true, hide: false);
+  parser.addOption(DART_SDK_PATH_OPTION, abbr: 'd',
+      help: 'The path to the DART SDK directory.');
 
-  parser.addFlag('help', abbr: 'h', help: 'Print usage information.', hide: false);
+  parser.addOption(PACKAGE_ROOT_OPTION, abbr: 'w',
+      help: 'A path to the directory of your package to tests that contains the "pubspec.yaml" file. Default is the current directory.');
+
+  parser.addFlag(USE_PUB_SERVE_FLAG, defaultsTo: false, abbr: 's', negatable: true,
+      help: 'Whether "pub serve" should be invoked to serve the tests.');
+
+  parser.addFlag(HELP_FLAG, abbr: 'h', help: 'Print usage information.');
+
+  parser.addFlag(INSTALL_CONTENTSHELL_FLAG, abbr: 'i', defaultsTo: true, negatable: true,
+      help: 'Execute "download_contentshell.sh" script if content_shell can not be found.');
 
   try {
     var ar = parser.parse(args);
 
-    if(ar['help'] == 'true') {
+    if(ar[HELP_FLAG]) {
       print(parser.getUsage());
       io.exit(0);
     }
 
-    pubServePort = int.parse(ar['port']);
-    isPubServe = ar['pub-serve'] == 'true';
+    pubServePort = int.parse(ar[PORT_OPTION]);
+    isPubServe = ar[USE_PUB_SERVE_FLAG];
 
     if(ar.rest.length != 0) {
       print(parser.getUsage());
       io.exit(1);
     }
 
-    print('Using config file "${ar['config-file']}".');
-    var config = new io.File(ar['config-file']).readAsStringSync();
-    var configData = JSON.decode(config);
-    configData.keys.forEach((testName) {
-      tests[testName] = new Test.fromConfig(configData[testName]);
-    });
+    configFilePath = ar[CONFIG_FILE_OPTION];
 
-    if(ar['test-name'] != null) {
-      List<String> testNames = ar['test-name'];
+    if(ar[TEST_NAME_OPTION] != null) {
+      List<String> testNames = ar[TEST_NAME_OPTION];
       if(testNames.length > 0) {
         tests.keys.forEach((testName) {
           if (testNames.contains(testName)) {
@@ -147,11 +185,37 @@ void processArgs(List<String> args) {
         });
       }
     }
+
+    if(ar[INSTALL_CONTENTSHELL_FLAG]) {
+      isInstallContentShell = true;
+      if(ar[DART_SDK_PATH_OPTION] != null) {
+        dartSdkPath = ar[DART_SDK_PATH_OPTION];
+      } else {
+        if(io.Platform.environment.containsKey('DART_SDK')) {
+          dartSdkPath = io.Platform.environment['DART_SDK'];
+        }
+      }
+    }
+
+    if(ar[PACKAGE_ROOT_OPTION] != null) {
+      workingDir = new io.Directory(ar[PACKAGE_ROOT_OPTION]);
+    }
+
   } catch (e, s) {
     print('Parsing args threw: ${e}\n\n${s}');
     print(parser.getUsage());
     io.exit(1);
   }
+}
+
+void loadConfigFile() {
+  var configFile = path.join(workingDir.path, configFilePath);
+  print('Using config file "${configFile}".');
+  var config = new io.File(configFile).readAsStringSync();
+  var configData = JSON.decode(config);
+  configData.keys.forEach((testName) {
+    tests[testName] = new Test.fromConfig(configData[testName]);
+  });
 }
 
 int printResults() {
@@ -187,7 +251,7 @@ int printResults() {
 
 async.Future<io.Process> runPubServe() {
   print('launching pub serve --port $pubServePort test');
-  return io.Process.start('pub', ['serve', '--port', pubServePort, 'test'], workingDirectory: '..')
+  return io.Process.start('pub', ['serve', '--port', pubServePort, 'test'], workingDirectory: workingDir.path)
   .then((p) {
     var completer = new async.Completer();
 
@@ -236,7 +300,7 @@ async.Future runTest(String testName) {
   print('run test "$testName"');
   var url;
   if(isPubServe) {
-    url = 'http://localhost:$pubServePort/${testName}.html';
+    url = 'http://localhost:${pubServePort}/${test.path}${testName}.html';
   } else {
     url = '${testName}.html';
   }
@@ -263,7 +327,7 @@ async.Future runTest(String testName) {
     ..addAll(test.contentShellOptions)
     ..add(url);
   print('run "content_shell ${args.join(' ')}"');
-  return io.Process.start('content_shell', args)
+  return io.Process.start('content_shell', args, workingDirectory: workingDir.path)
   .then((p) {
     p.stdout.listen((stdOut) {
       var text = UTF8.decoder.convert(stdOut);
