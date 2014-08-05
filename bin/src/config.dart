@@ -1,5 +1,10 @@
 part of bwu_testrunner.run;
 
+const CONTENT_SHELL_OPTIONS = 'contentShellOptions';
+const SKIP_CONTENTSHELL_TEST = 'skipContentShellTest';
+const SKIP_PUBSERVE_TEST = 'skipPubServeTest';
+const SKIP_FILE_TEST = 'skipFileTest';
+
 class TestConfig {
   Map<TestType, TestResult> results = <TestType, TestResult>{
       TestType.FILE: new TestResult(TestType.FILE),
@@ -21,21 +26,21 @@ class TestConfig {
   }
 
   TestConfig.fromConfig(Map configData) {
-    if (configData.containsKey('contentShellOptions') &&
-    configData['contentShellOptions'] != null) {
-      contentShellOptions = configData['contentShellOptions'];
+    if (configData.containsKey(CONTENT_SHELL_OPTIONS) &&
+    configData[CONTENT_SHELL_OPTIONS] != null) {
+      contentShellOptions = configData[CONTENT_SHELL_OPTIONS];
     }
-    if (configData.containsKey('skipContentShellTest') &&
-    configData['skipContentShellTest'] != null) {
-      skipContentShellTest = configData['skipContentShellTest'];
+    if (configData.containsKey(SKIP_CONTENTSHELL_TEST) &&
+    configData[SKIP_CONTENTSHELL_TEST] != null) {
+      skipContentShellTest = configData[SKIP_CONTENTSHELL_TEST];
     }
-    if (configData.containsKey('skipPubServeTest') &&
-    configData['skipPubServeTest'] != null) {
-      skipPubServeTest = configData['skipPubServeTest'];
+    if (configData.containsKey(SKIP_PUBSERVE_TEST) &&
+    configData[SKIP_PUBSERVE_TEST] != null) {
+      skipPubServeTest = configData[SKIP_PUBSERVE_TEST];
     }
-    if (configData.containsKey('skipFileTest') &&
-    configData['skipFileTest'] != null) {
-      skipPubServeTest = configData['skipFileTest'];
+    if (configData.containsKey(SKIP_FILE_TEST) &&
+    configData[SKIP_FILE_TEST] != null) {
+      skipFileTest = configData[SKIP_FILE_TEST];
     }
     if (configData.containsKey('path') && configData['path'] != null) {
       path = configData['path'];

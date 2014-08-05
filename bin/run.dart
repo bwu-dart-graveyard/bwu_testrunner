@@ -83,7 +83,8 @@ final FAIL_TEST_CASE_REGEX = new RegExp(r'^\d+?.+?(FAIL|ERROR).+?.*$');
 final FAIL_TEST_SUITE_REGEX = new RegExp(r'^FAIL$');
 
 async.Future runTest(String testName, TestType testType) {
-  var test = tests[testName]..results[testType].name = testName;
+  var test = tests[testName]
+      ..results[testType].name = testName;
 
   var url;
   switch (testType) {

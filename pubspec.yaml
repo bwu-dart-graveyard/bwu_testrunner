@@ -1,5 +1,5 @@
 name: bwu_testrunner
-version: 0.0.2-1
+version: 0.0.2-2
 description: bwu_testrunner runs a set of Dart web tests with content_shell and prints a summary.
 homepage: https://github.com/bwu-dart/bwu_testrunner
 author: Günter Zöchbauer <guenter@gzoechbauer.com>
