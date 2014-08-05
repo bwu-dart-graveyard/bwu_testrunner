@@ -97,7 +97,7 @@ async.Future<bool> downloadContentShell() {
 async.Future<bool> _extractContentShellArchive() {
   return io.Process.start('unzip', [contentShellArchivePath]).then((p) {
     var archivePath;
-    var regExp = new RegExp(r'^ extracting: (.*?)/.*');
+    var regExp = new RegExp(r'(?:\n|^) extracting: (.*?)/.*', multiline: true);
     p.stdout.listen((stdOut) {
       var text = UTF8.decoder.convert(stdOut);
       io.stdout.write(text);
@@ -106,7 +106,7 @@ async.Future<bool> _extractContentShellArchive() {
       if (match != null) {
         contentShellPath = path.join(
             io.Directory.current.absolute.path,
-            match.group(1),
+            match.group(2),
             'content_shell');
 
         print('contentShell extracted to: $contentShellPath');
