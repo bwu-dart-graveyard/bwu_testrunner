@@ -67,13 +67,7 @@ async.Future<bool> downloadContentShell() {
       path.join(dartSdkPath, '../chromium/download_contentshell.sh'),
       []).then((p) {
     var text;
-    // Extract concrete archive file name from text like
-
-
-
-
-
-        //Downloading http://dartlang.org/editor/update/channels/be/38843/dartium/content_shell-linux-x64-release.zip to content_shell-linux-x64-release.zip.
+    //Downloading http://dartlang.org/editor/update/channels/be/38843/dartium/content_shell-linux-x64-release.zip to content_shell-linux-x64-release.zip.
     var regExp = new RegExp(r'^Downloading http://.*?.zip to (.*?\.zip)');
     p.stdout.listen((stdOut) {
       text = UTF8.decoder.convert(stdOut);
@@ -107,12 +101,15 @@ async.Future<bool> _extractContentShellArchive() {
     p.stdout.listen((stdOut) {
       var text = UTF8.decoder.convert(stdOut);
       io.stdout.write(text);
+      // Extract concrete archive file name from text like
       var match = regExp.firstMatch(text);
       if (match != null) {
         contentShellPath = path.join(
             io.Directory.current.absolute.path,
             match.group(1),
             'content_shell');
+
+        print('contentShell extracted to: $contentShellPath');
       }
     });
     p.stderr.listen((stdErr) {
