@@ -106,7 +106,7 @@ async.Future<bool> _extractContentShellArchive() {
       if (match != null) {
         contentShellPath = path.join(
             io.Directory.current.absolute.path,
-            match.group(2),
+            match.group(1),
             'content_shell');
 
         print('contentShell extracted to: $contentShellPath');
