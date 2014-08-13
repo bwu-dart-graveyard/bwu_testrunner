@@ -71,7 +71,7 @@ async.Future<bool> downloadContentShell() {
     var regExp = new RegExp(r'^Downloading http://.*?.zip to (.*?\.zip)');
     p.stdout.listen((stdOut) {
       text = UTF8.decoder.convert(stdOut);
-      io.stdout.write(text);
+      write(text);
       var match = regExp.firstMatch(text);
       if (match != null) {
         contentShellArchivePath = path.join(
@@ -80,7 +80,7 @@ async.Future<bool> downloadContentShell() {
       }
     });
     p.stderr.listen((stdErr) {
-      io.stderr.write(UTF8.decoder.convert(stdErr));
+      writeErr(UTF8.decoder.convert(stdErr));
     });
 
     return p.exitCode.then((exitCode) {
@@ -100,7 +100,7 @@ async.Future<bool> _extractContentShellArchive() {
     var regExp = new RegExp(r'(?:\n|^) extracting: (.*?)/.*', multiLine: true);
     p.stdout.listen((stdOut) {
       var text = UTF8.decoder.convert(stdOut);
-      io.stdout.write(text);
+      write(text);
       // Extract concrete archive file name from text like
       var match = regExp.firstMatch(text);
       if (match != null) {
@@ -109,11 +109,11 @@ async.Future<bool> _extractContentShellArchive() {
             match.group(1),
             'content_shell');
 
-        print('contentShell extracted to: $contentShellPath');
+        writeln('contentShell extracted to: $contentShellPath');
       }
     });
     p.stderr.listen((stdErr) {
-      io.stderr.write(UTF8.decoder.convert(stdErr));
+      writeErr(UTF8.decoder.convert(stdErr));
     });
 
     return p.exitCode.then((exitCode) {

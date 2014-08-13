@@ -61,7 +61,7 @@ class TestType {
 
 void loadConfigFile() {
   var configFile = path.join(workingDir.path, configFilePath);
-  print('Using config file "${configFile}".');
+  writeln('Using config file "${configFile}".');
   var config = new io.File(configFile).readAsStringSync();
   var configData = JSON.decode(config);
   configData.keys.forEach((testName) {

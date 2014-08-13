@@ -2,11 +2,9 @@ part of bwu_testrunner.run;
 
 void fail(int exitCode, [String message]) {
   if (message != null) {
-    io.stderr.writeln(message);
+    writelnErr(message);
   }
   io.Directory.current = workingDir;
-  io.stdout.flush();
-  io.stderr.flush();
   io.exit(exitCode);
 }
 
@@ -18,3 +16,23 @@ List<String> toLines(String text) {
   return lines;
 }
 
+
+void writeErr(text) {
+  io.stderr.write('$text');
+  //io.stderr.flush();
+}
+
+void writelnErr(text) {
+  io.stderr.writeln('$text');
+  //io.stderr.flush();
+}
+
+void write(text) {
+  io.stderr.write('$text');
+  //io.stderr.flush();
+}
+
+void writeln(text) {
+  io.stderr.writeln('$text');
+  //io.stderr.flush();
+}

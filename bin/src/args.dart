@@ -87,7 +87,7 @@ void processArgs(List<String> args) {
     var ar = parser.parse(args);
 
     if (ar[HELP_FLAG]) {
-      print(parser.getUsage());
+      writeln(parser.getUsage());
       io.Directory.current = workingDir;
       io.exit(0);
     }
@@ -97,7 +97,7 @@ void processArgs(List<String> args) {
     runFileTests = ar[NO_FILE_FLAG];
 
     if (ar.rest.length != 0) {
-      print(parser.getUsage());
+      writeln(parser.getUsage());
       fail(1);
     }
 
@@ -132,7 +132,7 @@ void processArgs(List<String> args) {
 //    if(ar[WORKING_DIR_OPTION] != null) {
 //      workingDir = new io.Directory(ar[WORKING_DIR_OPTION]);
 //      io.Directory.current = workingDir;
-//      print('Changed current working directory to : ${workingDir}');
+//      writeLn('Changed current working directory to : ${workingDir}');
 //    }
 
     if (ar[CONTENT_SHELL_PATH_OPTION] != null) {
@@ -148,8 +148,8 @@ void processArgs(List<String> args) {
     }
 
   } catch (e, s) {
-    print('Parsing args threw: ${e}\n\n${s}');
-    print(parser.getUsage());
+    writeln('Parsing args threw: ${e}\n\n${s}');
+    writeln(parser.getUsage());
     fail(1);
   }
 }

@@ -27,13 +27,11 @@ class TestResult {
 }
 
 int printResults() {
-  print('\n');
+  writeln('\n');
 
   bool isFail = false;
 
   TestType.values.forEach((testType) {
-    io.stdout.flush();
-    io.stderr.flush();
     int failSuitCount = 0;
     int successCount = 0;
     int failCount = 0;
@@ -42,21 +40,21 @@ int printResults() {
     switch (testType) {
       case TestType.FILE:
         if (runFileTests) {
-          print('\n------------------- File tests --------------------');
+          writeln('\n------------------- File tests --------------------');
           tests.keys.forEach(
                   (String test) => print(tests[test].results[TestType.FILE]));
         } else {
-          print('\n--------------- File tests skipped ----------------');
+          writeln('\n--------------- File tests skipped ----------------');
         }
         break;
 
       case TestType.PUB_SERVE:
         if (runPubServeTests) {
-          print('\n----------------- Pub serve tests -----------------');
+          writeln('\n----------------- Pub serve tests -----------------');
           tests.keys.forEach(
-                  (String test) => print(tests[test].results[TestType.FILE]));
+                  (String test) => writeln(tests[test].results[TestType.FILE]));
         } else {
-          print('\n------------- Pub serve tests skipped -------------');
+          writeln('\n------------- Pub serve tests skipped -------------');
         }
         break;
 
@@ -76,15 +74,13 @@ int printResults() {
       }
     });
 
-    print('\n===================== SUMMARY =====================');
-    io.stdout.flush();
-    io.stderr.flush();
+    writeln('\n===================== SUMMARY =====================');
     if (failSuitCount != 0 || failCount != 0) {
-      io.stderr.writeln(
+      writelnErr(
           'FAIL - Test Suite: FAIL $failSuitCount PASS ${tests.length - failSuitCount - skippedSuitesCount} (of ${tests.length}) SKIP ${skippedSuitesCount}, Test Case: FAIL $failCount PASS $successCount (of ${failCount + successCount})');
       isFail = true;
     } else {
-      print(
+      writeln(
           'PASS - Suite: ${tests.length - skippedSuitesCount}, Test cases: $successCount, Suites skipped: ${skippedSuitesCount}');
     }
   });

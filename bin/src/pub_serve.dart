@@ -1,7 +1,7 @@
 part of bwu_testrunner.run;
 
 async.Future<io.Process> runPubServe() {
-  print('launching pub serve --port $pubServePort test');
+  writeln('launching pub serve --port $pubServePort test');
   return io.Process.start(
       'pub',
       ['serve', '--port', pubServePort.toString(), 'test'],
@@ -11,7 +11,7 @@ async.Future<io.Process> runPubServe() {
     p.stdout.listen((stdOut) {
       var text = UTF8.decoder.convert(stdOut);
       toLines(text).forEach((line) {
-        print('PUB | $line');
+        writeln('PUB | $line');
       });
 
 
@@ -24,13 +24,13 @@ async.Future<io.Process> runPubServe() {
     p.stderr.listen((stdErr) {
       var text = UTF8.decoder.convert(stdErr);
       toLines(text).forEach((line) {
-        io.stderr.writeln('PUB err | $line');
+        writelnErr('PUB err | $line');
       });
     });
     completer.future.timeout(new Duration(seconds: 120), onTimeout: () {
       // called on timeout when future is not yet completed
       var exitCode = p.kill(io.ProcessSignal.SIGKILL);
-      io.stderr.writeln('kill pub serve - succeeded: $exitCode');
+      writelnErr('kill pub serve - succeeded: $exitCode');
       completer.completeError('pub serve launch timed out');
     });
     return completer.future;

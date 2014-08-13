@@ -28,7 +28,7 @@ String configFilePath;
 
 void main(List<String> args) {
   workingDir = io.Directory.current;
-  print('current working directory: ${workingDir}');
+  writeln('current working directory: ${workingDir}');
   contentShellPath = 'content_shell';
   contentShellDownloadPath = workingDir.absolute.path;
 
@@ -40,7 +40,7 @@ void main(List<String> args) {
 
   if (isInstallContentShell) {
     io.Directory.current = contentShellDownloadPath;
-    print('Download content_shell archive to "${contentShellDownloadPath}');
+    writeln('Download content_shell archive to "${contentShellDownloadPath}');
 
     future = future.then((e) => installContentShell()).then((e) {
       io.Directory.current = workingDir;
@@ -52,7 +52,7 @@ void main(List<String> args) {
     future = future.then((e) => runPubServe()).then((p) {
       pubServe = p;
       p.exitCode.then((ec) {
-        print('pub serve ended with exit code $ec');
+        writeln('pub serve ended with exit code $ec');
       });
     });
   }
@@ -101,7 +101,7 @@ async.Future runTest(String testName, TestType testType) {
 
   if (test.skipContentShellTest) {
     test.results[testType].isSkipped = true;
-    print(
+    writeln(
         'Skipping test "${testName}". Test is configured to be skipped when run in "content_shell" ');
     return null;
   }
@@ -110,7 +110,7 @@ async.Future runTest(String testName, TestType testType) {
     case TestType.PUB_SERVE:
       if (test.skipPubServeTest) {
         test.results[testType].isSkipped = true;
-        print(
+        writeln(
             'Skipping test "${testName}". Test is configured to be skipped when run with "pub serve" ');
         return null;
       }
@@ -119,7 +119,7 @@ async.Future runTest(String testName, TestType testType) {
     case TestType.FILE:
       if (test.skipFileTest) {
         test.results[testType].isSkipped = true;
-        print(
+        writeln(
             'Skipping test "${testName}". Test is configured to be skipped when run without "pub serve" ');
         return null;
       }
@@ -130,7 +130,7 @@ async.Future runTest(String testName, TestType testType) {
       ..addAll(test.contentShellOptions)
       ..add(url);
 
-  print('run "${contentShellPath} ${args.join(' ')}"');
+  writeln('run "${contentShellPath} ${args.join(' ')}"');
 
   return io.Process.start(
       contentShellPath,
@@ -148,13 +148,13 @@ async.Future runTest(String testName, TestType testType) {
         } else if (FAIL_TEST_SUITE_REGEX.firstMatch(line) != null) {
           test.results[testType].suiteFailed = true;
         }
-        print('CS | $line');
+        writeln('CS | $line');
       });
     });
     p.stderr.listen((stdErr) {
       var text = UTF8.decoder.convert(stdErr);
       toLines(text).forEach((line) {
-        io.stderr.writeln('CS err | $line');
+        writelnErr('CS err | $line');
       });
     });
     return p.exitCode.then((ec) {
