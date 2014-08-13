@@ -15,7 +15,11 @@
 
 ## Usage
 
-- create a config file
+### create a config file
+
+By default the config file is looked up in the `test` directory of the package where the script is invoked.
+
+A sample configuration file:
 
 ```json
 {
@@ -37,6 +41,24 @@
     "core_shared_lib": {"contentShellOptions": ["--allow-external-pages", "--allow-file-access-from-files"]}
 }
 ```
+
+The configuration file contains a list of test files and an associated map of options.  
+When no options are provided an empty map must be passed.
+
+### Install the package:
+
+```bash
+pub global activate bwu_testrunner
+```
+
+### Run the tests
+
+from the directory of the package containing the tests run
+
+```bash
+pub global run bwu_testrunner:run
+```
+
 
 ### Options
 ```
