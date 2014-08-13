@@ -13,9 +13,6 @@
 - can be invoked by `pub global run`
 
 
-##Prerequisites
-- content_shell needs to be installed
-
 ## Usage
 
 - create a config file
