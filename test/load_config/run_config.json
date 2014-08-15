@@ -1,0 +1,28 @@
+{
+  "default": {
+    "tests": {
+      "simple_test": {
+        "path": "..",
+        "skip": true
+      }
+    },
+    "launchers": {
+      "console": {
+        "type": "console"
+      },
+      "content_shell, pub serve": {
+        "type": "content_shell",
+        "pub-serve": true
+      }, 
+      "content_shell, allow popups": {
+        "type": "content_shell",
+        "contentShellOptions": ["--disable-popup-blocking"]
+      }, 
+      "content_shell, file access": {
+        "type": "content_shell",
+        "pub-serve": false,
+        "contentShellOptions": ["--allow-external-pages", "--allow-file-access-from-files"]
+      }
+    }
+  }
+}

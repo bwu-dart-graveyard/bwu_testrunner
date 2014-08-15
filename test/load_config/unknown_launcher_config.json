@@ -1,0 +1,19 @@
+{
+  "tests": {
+    "unknown_launcher_should_throw": {
+      "path": "..",
+      "skip": true,
+      "launchers": {
+        "console": {},
+        "content_shell": {
+          "pub-serve": true,
+          "contentShellOptions": ["--allow-external-pages", "--allow-file-access-from-files"]
+        },
+        "unknown-launcher": {
+          "pub-serve": false,
+          "contentShellOptions": ["--disable-popup-blocking"]
+        }
+      }
+    }
+  }
+}

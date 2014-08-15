@@ -1,0 +1,23 @@
+{
+  "test_a_group_with_one_succeeding_test": {
+    "skip": true,
+    "testtypes": ["console"],
+    "comment": "html-pub-serve, html-file"
+  },
+  "comment": {
+    "core_ajax_dart": { "path": "", "skipFileTest": true,  "contentShellOptions": ["--allow-external-pages", "--allow-file-access-from-files"] },
+    "core_animated_pages": {},
+    "core_collapse": {},
+    "core_input": {},
+    "core_localstorage_dart": {},
+    "core_media_query": {"skipContentShellTest" : true, "contentShellOptions": ["--disable-popup-blocking"],
+        "comment": "TODO(zoechi) resizeTo() doesn't work in contentShell see https://code.google.com/p/dart/issues/detail?id=20273"},
+    "core_menu_button": {},
+    "core_selection": {},
+    "core_selection_multi": {},
+    "core_selector_activate_event": {},
+    "core_selector_basic": {},
+    "core_selector_multi": {},
+    "core_shared_lib": {"contentShellOptions": ["--allow-external-pages", "--allow-file-access-from-files"]}
+  }
+}

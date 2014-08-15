@@ -1,4 +1,6 @@
-part of bwu_testrunner.run;
+library bwu_testrunner.util;
+
+import 'dart:io' as io;
 
 void fail(int exitCode, [String message]) {
   if (message != null) {

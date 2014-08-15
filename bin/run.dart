@@ -3,21 +3,21 @@ library bwu_testrunner.run;
 
 import 'dart:async' as async;
 import 'dart:io' as io;
-import 'dart:convert' show JSON;
 import 'dart:convert' show UTF8;
-import 'package:args/args.dart' show ArgParser, ArgResults;
+//import 'package:args/args.dart' show ArgParser, ArgResults;
 import 'package:path/path.dart' as path;
 
-part 'src/config.dart';
-part 'src/result.dart';
-part 'src/args.dart';
-part 'src/content_shell.dart';
-part 'src/pub_serve.dart';
-part 'src/util.dart';
+import 'package:bwu_testrunner/config.dart';
+import 'package:bwu_testrunner/result.dart';
+import 'package:bwu_testrunner/util.dart';
+
+part 'package:bwu_testrunner/args.dart';
+part 'package:bwu_testrunner/content_shell.dart';
+part 'package:bwu_testrunner/pub_serve.dart';
 
 // A list of possible options for Chromium can be found at http://peter.sh/experiments/chromium-command-line-switches/
 
-final Map<String, TestConfig> tests = {};
+Map<String,TestConfig> tests;
 bool runPubServeTests = true;
 bool runFileTests = true;
 int pubServePort;
@@ -34,7 +34,7 @@ void main(List<String> args) {
 
   processArgs(args);
 
-  loadConfigFile();
+  tests = TestConfig.load(path.join(workingDir.path, configFilePath));
 
   var future = new async.Future.value();
 

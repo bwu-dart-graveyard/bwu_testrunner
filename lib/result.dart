@@ -1,4 +1,4 @@
-part of bwu_testrunner.run;
+library bwu_testrunner.testresult;
 
 class TestResult {
   String name = '';
