@@ -11,7 +11,7 @@ void main() {
 
     test('simple test', () {
       var configs = TestConfig.load('run_config.json');
-      var config = configs["default"];
+      var config = configs['default'];
       expect(config, isNotNull);
       expect(config.launchers.length, equals(4));
       expect(config.tests.length, equals(1));
@@ -53,5 +53,17 @@ void main() {
       expect(load, throwsA(new isInstanceOf<String>()));
     });
 
+  });
+
+  group('Launch console -', () {
+
+    test('simple test', () {
+    });
+  });
+
+  group('Launch content_shell -', () {
+
+    test('simple test', () {
+    });
   });
 }

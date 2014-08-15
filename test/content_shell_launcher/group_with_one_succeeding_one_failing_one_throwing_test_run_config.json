@@ -1,0 +1,14 @@
+{
+  "default": {
+    "tests": {
+      "group_with_one_succeeding_one_failing_one_throwing_test": {}
+    },
+      "content_shell, pub serve": {
+        "type": "content_shell"
+      },
+      "content_shell, file": {
+        "type": "content_shell"
+      }
+    }
+  }
+}

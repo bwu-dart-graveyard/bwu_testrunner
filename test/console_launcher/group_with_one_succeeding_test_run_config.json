@@ -1,0 +1,12 @@
+{
+  "default": {
+    "tests": {
+      "group_with_one_succeeding_test": {}
+    },
+    "launchers": {
+      "console": {
+        "type": "console"
+      }
+    }
+  }
+}

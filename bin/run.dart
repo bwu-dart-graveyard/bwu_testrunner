@@ -11,9 +11,10 @@ import 'package:bwu_testrunner/config.dart';
 import 'package:bwu_testrunner/result.dart';
 import 'package:bwu_testrunner/util.dart';
 
+import 'package:bwu_testrunner/content_shell.dart';
+import 'package:bwu_testrunner/pub_serve.dart';
+
 part 'package:bwu_testrunner/args.dart';
-part 'package:bwu_testrunner/content_shell.dart';
-part 'package:bwu_testrunner/pub_serve.dart';
 
 // A list of possible options for Chromium can be found at http://peter.sh/experiments/chromium-command-line-switches/
 

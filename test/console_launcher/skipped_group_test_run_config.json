@@ -1,0 +1,12 @@
+{
+  "default": {
+    "tests": {
+      "skipped_group_test": {}
+    },
+    "launchers": {
+      "console": {
+        "type": "console"
+      }
+    }
+  }
+}

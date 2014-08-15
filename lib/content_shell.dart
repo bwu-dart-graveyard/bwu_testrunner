@@ -1,10 +1,43 @@
-part of bwu_testrunner.run;
+library bwu_testrunner.content_shell;
 
-String contentShellPath = "content_shell";
+import 'dart:async' as async;
+import 'dart:convert' show UTF8;
+import 'dart:io' as io;
+import 'package:path/path.dart' as path;
+import 'util.dart';
+
+bool doInstallContentShell = false;
 String contentShellDownloadPath;
-String contentShellArchivePath;
+String dartSdkPath;
+
+String _contentShellPath = "content_shell";
+String get contentShellPath => _contentShellPath;
+String _contentShellArchivePath;
+bool _isInstallContentShellDone = false;
+bool _isContentShellInstalling = false;
+async.Completer _completer;
 
 async.Future<bool> installContentShell() {
+  assert(dartSdkPath != null);
+
+  assert(doInstallContentShell != null);
+
+  if(doInstallContentShell) {
+    assert(dartSdkPath != null);
+    assert(contentShellDownloadPath != null);
+  }
+
+  if(_isInstallContentShellDone) {
+    return new async.Future.value(true);
+  }
+
+  if(_isContentShellInstalling) {
+    return _completer.future;
+  }
+
+  _completer = new async.Completer();
+  _isContentShellInstalling = true;
+
   return checkContentShellInPath().then((success) {
     if (success) {
       return true;
@@ -14,12 +47,18 @@ async.Future<bool> installContentShell() {
           // nothing more to do
           return true;
         } else {
+          if(!doInstallContentShell) {
+            return new async.Future.value(false);
+          }
+
           // download content_shell archive
           return downloadContentShell().then((success) {
             if (success) {
               // extract content_shell archive
               return _extractContentShellArchive().then((success) {
                 if (success) {
+                  _isInstallContentShellDone;
+                  _isContentShellInstalling = false;
                   return true;
                 } else {
                   fail(1);
@@ -37,7 +76,7 @@ async.Future<bool> installContentShell() {
 
 // check if content_shell is available in the path
 async.Future<bool> checkContentShellInPath() {
-  return io.Process.start(contentShellPath, ['--dump-render-tree']).then((p) {
+  return io.Process.start(_contentShellPath, ['--dump-render-tree']).then((p) {
     return p.exitCode.then((exitCode) => exitCode == 0);
   }).catchError((e) {
     return false;
@@ -53,7 +92,7 @@ async.Future<bool> tryFindContentShell() {
     });
     return p.exitCode.then((exitCode) {
       if (exitCode == 0) {
-        contentShellPath = path;
+        _contentShellPath = path;
       } else {
         return false;
       }
@@ -74,7 +113,7 @@ async.Future<bool> downloadContentShell() {
       write(text);
       var match = regExp.firstMatch(text);
       if (match != null) {
-        contentShellArchivePath = path.join(
+        _contentShellArchivePath = path.join(
             contentShellDownloadPath,
             match.group(1));
       }
@@ -95,7 +134,7 @@ async.Future<bool> downloadContentShell() {
 
 // extract downloaded content_shell archive
 async.Future<bool> _extractContentShellArchive() {
-  return io.Process.start('unzip', [contentShellArchivePath]).then((p) {
+  return io.Process.start('unzip', [_contentShellArchivePath]).then((p) {
     var archivePath;
     var regExp = new RegExp(r'(?:\n|^) extracting: (.*?)/.*', multiLine: true);
     p.stdout.listen((stdOut) {
@@ -104,12 +143,12 @@ async.Future<bool> _extractContentShellArchive() {
       // Extract concrete archive file name from text like
       var match = regExp.firstMatch(text);
       if (match != null) {
-        contentShellPath = path.join(
+        _contentShellPath = path.join(
             io.Directory.current.absolute.path,
             match.group(1),
             'content_shell');
 
-        writeln('contentShell extracted to: $contentShellPath');
+        writeln('contentShell extracted to: $_contentShellPath');
       }
     });
     p.stderr.listen((stdErr) {
@@ -118,7 +157,7 @@ async.Future<bool> _extractContentShellArchive() {
 
     return p.exitCode.then((exitCode) {
       if (exitCode != 0) {
-        fail(1, 'Extracting "${contentShellArchivePath}" failed.');
+        fail(1, 'Extracting "${_contentShellArchivePath}" failed.');
       } else {
         return true;
       }

@@ -1,0 +1,15 @@
+{
+  "default": {
+    "tests": {
+      "group_with_one_failing_test": {}
+    },
+    "launchers": {
+      "content_shell, pub serve": {
+        "type": "content_shell"
+      },
+      "content_shell, file": {
+        "type": "content_shell"
+      }
+    }
+  }
+}

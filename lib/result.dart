@@ -1,28 +1,44 @@
 library bwu_testrunner.testresult;
+import 'package:bwu_testrunner/launcher.dart';
+import 'package:bwu_testrunner/config.dart';
+import 'package:bwu_testrunner/util.dart';
 
-class TestResult {
-  String name = '';
+abstract class LauncherResult {
   bool suiteFailed = false;
   int successCount = 0;
   int failCount = 0;
   bool isSkipped = false;
-  TestType testType;
-  TestResult(this.testType);
+  Launcher launcher;
+  Test test;
+  int exitCode = 0;
+  List<Output> output;
+
+  //LauncherResult(this.testType);
 
   @override
   String toString() {
     if (suiteFailed) {
-      return '! FAIL $name Test Suite FAIL';
+      return '! FAIL $test.name Test Suite FAIL';
     } else if (isSkipped) {
-      return '- SKIP $name Test Suite SKIP';
+      return '- SKIP $test.name Test Suite SKIP';
     } else {
       if (failCount != 0) {
         return
-          '! FAIL $name $failCount FAIL, $successCount PASS (of ${successCount + failCount})';
+          '! FAIL $test.name $failCount FAIL, $successCount PASS (of ${successCount + failCount})';
       } else {
-        return '  PASS $name (all of $successCount)';
+        return '  PASS $test.name (all of $successCount)';
       }
     }
+  }
+
+  LauncherResult.parse(this.launcher, this.test, this.exitCode, this.output);
+}
+
+class Output {
+  bool error = false;
+  String output;
+  Output(this.output, {bool error : false}) {
+    if(error == null) error = false;
   }
 }
 

@@ -1,8 +1,12 @@
 library bwu_testrunner.launcher;
 
+import 'dart:async' as async;
 import 'console_launcher.dart';
 import 'package:bwu_testrunner/content_shell_launcher.dart';
+import 'package:bwu_testrunner/config.dart';
+import 'package:bwu_testrunner/result.dart';
 
+// TODO(zoechi) split Launcher base class and Launcher wrapper into two classes
 class Launcher {
 
   static final Map _registeredLaunchers = <String,Launcher>{
@@ -40,6 +44,10 @@ class Launcher {
   }
 
   LauncherConfig parseConfig(Map config) => null;
+
+  async.Future<LauncherResult> launch(Test test, LauncherConfig config) {
+    return wrappedLauncher.launch(test, config);
+  }
 }
 
 abstract class LauncherConfig {
