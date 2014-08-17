@@ -1,7 +1,9 @@
 {
   "default": {
     "tests": {
-      "non_existing_test": {}
+      "non_existing_test": {
+        "path": "src"
+      }
     },
     "launchers": {
       "console": {

@@ -1,8 +1,8 @@
 {
   "default": {
     "tests": {
-      "group_with_one_skipped_test": {
-        "path": "content_shell_launcher"
+      "group_with_one_succeeding_one_failing_one_throwing_test": {
+        "path": "content_shell_launcher/src"
       }
     },
     "launchers": {

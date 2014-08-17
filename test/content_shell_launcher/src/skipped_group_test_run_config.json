@@ -1,17 +1,19 @@
 {
   "default": {
     "tests": {
-      "group_with_one_failing_test": {
-        "path": "content_shell_launcher"
+      "skipped_group_test": {
+        "path": "content_shell_launcher/src"
       }
     },
     "launchers": {
       "content_shell, pub serve": {
         "type": "content_shell",
+        "timeout": 40,
         "pub-serve": true
       },
       "content_shell, file": {
-        "type": "content_shell"
+        "type": "content_shell",
+        "timeout": 20
       }
     }
   }

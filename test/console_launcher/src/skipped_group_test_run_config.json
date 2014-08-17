@@ -1,7 +1,9 @@
 {
   "default": {
     "tests": {
-      "skipped_group_test": {}
+      "skipped_group_test": {
+        "path": "src"
+      }
     },
     "launchers": {
       "console": {

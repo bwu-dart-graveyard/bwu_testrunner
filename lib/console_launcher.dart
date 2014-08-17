@@ -44,10 +44,14 @@ class ConsoleLauncher extends Launcher {
         output.add(new Output(text, error: true));
         writeErr(text);
       });
-      p.exitCode.then((exitCode) => completer.complete(new ConsoleLauncherResult.parse(this, test, exitCode, output)));
+      p.exitCode.then((exitCode) => completer.complete(
+          new ConsoleLauncherResult.parse(this, test, exitCode, output)));
     })
     .catchError((e, s) {
-      completer.complete(new ConsoleLauncherResult.parse(this, test, 0, []..add(new Output(s.toString()))));
+      completer.complete(
+          new ConsoleLauncherResult.parse(this, test, 0, []
+              ..add(new Output(s.toString())))
+              ..suiteFailed = true);
     });
     return completer.future;
   }

@@ -1,7 +1,9 @@
 {
   "default": {
     "tests": {
-      "group_with_one_succeeding_test": {}
+      "group_with_one_skipped_test": {
+        "path": "src"
+      }
     },
     "launchers": {
       "console": {

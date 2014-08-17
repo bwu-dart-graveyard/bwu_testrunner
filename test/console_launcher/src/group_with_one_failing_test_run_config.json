@@ -1,7 +1,9 @@
 {
   "default": {
     "tests": {
-      "group_with_one_failing_test": {}
+      "group_with_one_failing_test": {
+        "path": "src"
+      }
     },
     "launchers": {
       "console": {

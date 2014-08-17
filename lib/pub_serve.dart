@@ -17,7 +17,6 @@ async.Future<io.Process> runPubServe() {
   assert(workingDir != null);
   assert(pubServePort != null);
 
-  writeln('launching pub serve --port $pubServePort test');
   if(pubServeProcess != null) {
     return new async.Future.value(_pubServeProcess);
   }
@@ -28,6 +27,8 @@ async.Future<io.Process> runPubServe() {
 
   _completer = new async.Completer();
   _isPubServeStarting = true;
+
+  writeln('launching pub serve --port $pubServePort test');
 
   return io.Process.start(
       'pub',
@@ -60,16 +61,19 @@ async.Future<io.Process> runPubServe() {
       var exitCode = p.kill(io.ProcessSignal.SIGKILL);
       writelnErr('kill pub serve - succeeded: $exitCode');
       _pubServeProcess = null;
+      _isPubServeStarting = false;
       _completer.completeError('pub serve launch timed out');
     });
-    p.exitCode.then((exitCode) => _pubServeProcess = null);
+    p.exitCode.then((exitCode) {
+      writeln('pub serve ended.');
+    });
     return _completer.future;
   });
 }
 
 bool shutdownPubServe() {
   if(pubServeProcess != null) {
-    var ret = _pubServeProcess.kill(io.ProcessSignal.SIGABRT);
+    var ret = _pubServeProcess.kill(io.ProcessSignal.SIGKILL);
     _pubServeProcess = null;
     _isPubServeStarting = false;
     return ret;
