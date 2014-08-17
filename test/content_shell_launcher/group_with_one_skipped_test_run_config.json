@@ -1,11 +1,14 @@
 {
   "default": {
     "tests": {
-      "group_with_one_skipped_test": {}
+      "group_with_one_skipped_test": {
+        "path": "content_shell_launcher"
+      }
     },
     "launchers": {
       "content_shell, pub serve": {
-        "type": "content_shell"
+        "type": "content_shell",
+        "pub-serve": true
       },
       "content_shell, file": {
         "type": "content_shell"

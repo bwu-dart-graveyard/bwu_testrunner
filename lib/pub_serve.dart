@@ -14,6 +14,9 @@ int pubServePort;
 io.Directory workingDir;
 
 async.Future<io.Process> runPubServe() {
+  assert(workingDir != null);
+  assert(pubServePort != null);
+
   writeln('launching pub serve --port $pubServePort test');
   if(pubServeProcess != null) {
     return new async.Future.value(_pubServeProcess);
@@ -62,4 +65,14 @@ async.Future<io.Process> runPubServe() {
     p.exitCode.then((exitCode) => _pubServeProcess = null);
     return _completer.future;
   });
+}
+
+bool shutdownPubServe() {
+  if(pubServeProcess != null) {
+    var ret = _pubServeProcess.kill(io.ProcessSignal.SIGABRT);
+    _pubServeProcess = null;
+    _isPubServeStarting = false;
+    return ret;
+  }
+  return false;
 }

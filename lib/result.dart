@@ -8,30 +8,41 @@ abstract class LauncherResult {
   int successCount = 0;
   int failCount = 0;
   bool isSkipped = false;
+
   Launcher launcher;
   Test test;
   int exitCode = 0;
   List<Output> output;
+  bool isTimedOut = false;
 
   //LauncherResult(this.testType);
 
-  @override
-  String toString() {
-    if (suiteFailed) {
-      return '! FAIL $test.name Test Suite FAIL';
-    } else if (isSkipped) {
-      return '- SKIP $test.name Test Suite SKIP';
-    } else {
-      if (failCount != 0) {
-        return
-          '! FAIL $test.name $failCount FAIL, $successCount PASS (of ${successCount + failCount})';
-      } else {
-        return '  PASS $test.name (all of $successCount)';
-      }
-    }
+//  @override
+//  String toString() {
+//    if (suiteFailed) {
+//      return '! FAIL $test.name Test Suite FAIL';
+//    } else if (isSkipped) {
+//      return '- SKIP $test.name Test Suite SKIP';
+//    } else {
+//      if (failCount != 0) {
+//        return
+//          '! FAIL $test.name $failCount FAIL, $successCount PASS (of ${successCount + failCount})';
+//      } else {
+//        return '  PASS $test.name (all of $successCount)';
+//      }
+//    }
+//  }
+
+  LauncherResult.parse(this.launcher, this.test, this.exitCode, this.output, {this.isTimedOut: false}) {
+    assert(launcher != null);
+    assert(test != null);
+    assert(exitCode != null);
+    assert(output != null);
+    assert(isTimedOut != null);
   }
 
-  LauncherResult.parse(this.launcher, this.test, this.exitCode, this.output);
+  @override
+  String toString() => output.map((e) => e.output).join('\n');
 }
 
 class Output {

@@ -7,49 +7,77 @@ import 'package:bwu_testrunner/config.dart';
 import 'package:bwu_testrunner/result.dart';
 
 // TODO(zoechi) split Launcher base class and Launcher wrapper into two classes
-class Launcher {
 
-  static final Map _registeredLaunchers = <String,Launcher>{
-    'console': new ConsoleLauncher(),
-    'content_shell': new ContentShellLauncher()
+abstract class LauncherFactory {
+  Launcher newInstance(String name, Map config);
+}
+
+//class LauncherWrapper extends Launcher {
+//  final String name;
+//  final Launcher wrappedLauncher;
+//
+//
+//  LauncherConfig _config;
+//  LauncherConfig get config => _config;
+//
+//  @override
+//  LauncherWrapper._(this.name, this.wrappedLauncher, Map config) : super.protected() {
+//    _config = wrappedLauncher.parseConfig(config);
+//  }
+//
+//  async.Future<LauncherResult> launch(Test test) {
+//    return wrappedLauncher.launch(test);
+//  }
+//  @override
+//  LauncherConfig parseConfig(Map config) => wrappedLauncher.parseConfig(config);
+//}
+
+abstract class Launcher  {
+
+  static final Map _registeredLauncherFactories = <String,LauncherFactory>{
+    'console': new ConsoleLauncherFactory(),
+    'content_shell': new ContentShellLauncherFactory()
   };
 
-  registerLauncher(String launcherId, Launcher launcher) => _registeredLaunchers[launcherId] = launcher;
+  static registerLauncher(String launcherId, Launcher launcher) => _registeredLauncherFactories[launcherId] = launcher;
 
   factory Launcher(String name, String launcherId, Map config) {
-    var innerLauncher = _registeredLaunchers[launcherId];
-    if(innerLauncher == null) {
+    var factory = _registeredLauncherFactories[launcherId];
+    if(factory == null) {
       throw 'Launcher "${launcherId}" unknown.';
     }
 
-    return new Launcher._(name, innerLauncher, config);
+    return factory.newInstance(name, config);
   }
 
-  /***
-   * Use in derived classes.
-   */
-  Launcher.protected() : wrappedLauncher = null;
+  final String name;
+  Launcher.protected(this.name);
 
-  /**
-   * wrapped launcher
-   */
-  final Launcher wrappedLauncher;
+//  LauncherConfig parseConfig(Map config);
 
-  String name;
-  LauncherConfig _config;
-  LauncherConfig get config => _config;
+  LauncherConfig get config;
 
-  Launcher._(this.name, this.wrappedLauncher, Map config) {
-    _config = wrappedLauncher.parseConfig(config);
-  }
+  async.Future<LauncherResult> launch(Test test);
 
-  LauncherConfig parseConfig(Map config) => null;
-
-  async.Future<LauncherResult> launch(Test test, LauncherConfig config) {
-    return wrappedLauncher.launch(test, config);
-  }
+  void tearDown();
 }
 
 abstract class LauncherConfig {
-  LauncherConfig(Map config);
+  Duration timeout;
+
+  LauncherConfig(Map config, {int timeoutSeconds: 120}) {
+    if(timeoutSeconds == null) {
+      timeoutSeconds = 120;
+    }
+    var to = config['timeout'];
+    if(to != null) {
+      if(to is! int) {
+        throw 'Timeout value "${to}" must be an integer value and defines the timeout in seconds.';
+      } else {
+        timeoutSeconds = to;
+      }
+    }
+
+    timeout = new Duration(seconds: timeoutSeconds);
+  }
 }

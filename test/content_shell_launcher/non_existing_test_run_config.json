@@ -1,17 +1,19 @@
 {
   "default": {
     "tests": {
-      "group_with_one_succeeding_one_failing_one_throwing_test": {
+      "non_existing_test": {
         "path": "content_shell_launcher"
       }
     },
     "launchers": {
       "content_shell, pub serve": {
         "type": "content_shell",
+        "timeout": 40,
         "pub-serve": true
       },
       "content_shell, file": {
-        "type": "content_shell"
+        "type": "content_shell",
+        "timeout": 20
       }
     }
   }

@@ -9,17 +9,26 @@ import 'launcher.dart';
 import 'result.dart';
 import 'util.dart';
 
-
-class ConsoleLauncher extends Launcher {
-  ConsoleLauncher() : super.protected();
+class ConsoleLauncherFactory extends LauncherFactory {
 
   @override
-  ConsoleLauncherConfig parseConfig(Map config) {
-    return new ConsoleLauncherConfig(config);
+  Launcher newInstance(String name, Map config) {
+    return new ConsoleLauncher(name, config, this);
+  }
+}
+
+class ConsoleLauncher extends Launcher {
+
+  ConsoleLauncherFactory factory;
+  ConsoleLauncherConfig _config;
+  ConsoleLauncherConfig get config => _config;
+
+  ConsoleLauncher(String name, Map config, ConsoleLauncherFactory factory) : super.protected(name) {
+    _config = new ConsoleLauncherConfig(config);
   }
 
   @override
-  async.Future<LauncherResult> launch(Test test, ConsoleLauncherConfig config) {
+  async.Future<LauncherResult> launch(Test test) {
     var completer = new async.Completer<LauncherResult>();
     io.Process.start('dart', ['-c', path.join(test.path, '${test.name}.dart')])
     .then((io.Process p) {
@@ -36,8 +45,16 @@ class ConsoleLauncher extends Launcher {
         writeErr(text);
       });
       p.exitCode.then((exitCode) => completer.complete(new ConsoleLauncherResult.parse(this, test, exitCode, output)));
+    })
+    .catchError((e, s) {
+      completer.complete(new ConsoleLauncherResult.parse(this, test, 0, []..add(new Output(s.toString()))));
     });
     return completer.future;
+  }
+
+  @override
+  void tearDown() {
+    // nothing to do
   }
 }
 
@@ -52,6 +69,7 @@ class ConsoleLauncherResult extends LauncherResult {
   static final FAIL_TEST_SUITE_REGEX = new RegExp(r'^No tests found.$');
 
   ConsoleLauncherResult.parse(Launcher launcher, Test test, int exitCode, List<Output> output) : super.parse(launcher, test, exitCode, output) {
+    suiteFailed = true;
     output.forEach((o) {
       toLines(o.output).forEach((line) {
         if (PASS_TEST_CASE_REGEX.firstMatch(line) != null) {
@@ -65,8 +83,5 @@ class ConsoleLauncherResult extends LauncherResult {
         }
       });
     });
-//    output.forEach((o) {
-//      print('${o.error ? 'ERR:' : ' '} ${o.output}');
-//    });
   }
 }

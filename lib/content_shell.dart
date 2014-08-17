@@ -40,14 +40,14 @@ async.Future<bool> installContentShell() {
 
   return checkContentShellInPath().then((success) {
     if (success) {
-      return true;
+      return setDone(isSuccess: true);
     } else {
       return tryFindContentShell().then((success) {
         if (success) {
-          // nothing more to do
-          return true;
+          return setDone(isSuccess: true);
         } else {
           if(!doInstallContentShell) {
+            setDone(isSuccess: false);
             return new async.Future.value(false);
           }
 
@@ -57,21 +57,29 @@ async.Future<bool> installContentShell() {
               // extract content_shell archive
               return _extractContentShellArchive().then((success) {
                 if (success) {
-                  _isInstallContentShellDone;
-                  _isContentShellInstalling = false;
-                  return true;
+                  return setDone(isSuccess: true);
                 } else {
-                  fail(1);
+                  return setDone(isSuccess: false, exitCode: 1);
                 }
               });
             } else {
-              fail(1);
+              return setDone(isSuccess: false, exitCode: 1);
             }
           });
         }
       });
     }
   });
+}
+
+bool setDone({bool isSuccess: false, int exitCode}) {
+  if(exitCode != null) {
+    fail(exitCode);
+  }
+  _isInstallContentShellDone = true;
+  _isContentShellInstalling = false;
+  _completer.complete(isSuccess);
+  return isSuccess;
 }
 
 // check if content_shell is available in the path

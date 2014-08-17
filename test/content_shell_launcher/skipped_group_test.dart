@@ -12,4 +12,9 @@ void main() {
       expect(true, isTrue);
     });
   });
+
+  skip_test("some test", () {
+    expect(true, isTrue);
+  });
+
 }
