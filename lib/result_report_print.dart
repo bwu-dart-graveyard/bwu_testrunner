@@ -1,7 +1,11 @@
 library bwu_testrunner.result_report_print;
 
 import 'package:bwu_testrunner/result_report.dart';
+import 'package:bwu_testrunner/result.dart';
 
-class PrintSummary extends ResultReport {
+class ResultReportPrint extends ResultReport {
 
+  ResultReportPrint(List<LauncherResult> results) : super(results) {
+
+  }
 }

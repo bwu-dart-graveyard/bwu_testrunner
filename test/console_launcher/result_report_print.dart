@@ -1,137 +1,35 @@
 library bwu_testrunner.test.console_launcher;
 
+import 'dart:async' as async;
+
 import 'package:unittest/unittest.dart';
 import 'package:bwu_testrunner/config.dart';
 import 'package:bwu_testrunner/console_launcher.dart';
+import 'package:bwu_testrunner/result.dart';
+import 'package:bwu_testrunner/result_report_print.dart';
 
 void main() {
 
   group('ConsoleLauncher -', () {
 
-    skip_test('group with one succeeding test', () {
-      var configs = TestConfig.load('group_with_one_succeeding_test_run_config.json');
+    test('result report print test', () {
+      var configs = TestConfig.load('src/result_report_print_test_run_config.json');
       var config = configs['default'];
       expect(config, isNotNull);
 
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('group_with_one_succeeding_test'), reason: 'test.name');
-        expect(testResult.exitCode, equals(0), reason: 'exitCode');
-        expect(testResult.failCount, equals(0), reason: 'failCount');
-        expect(testResult.successCount, equals(1), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isFalse, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
+      var results = <LauncherResult>[];
+      return async.Future.wait(config.launchers.expand((launcher) {
+        return config.tests.map((test) {
+          return launcher.launch(test).then((ConsoleLauncherResult testResult) {
+            results.add(testResult);
+          });
+        });
 
-    skip_test('group with one failing test', () {
-      var configs = TestConfig.load('group_with_one_failing_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
+      }))
+      .then((e) {
+        new ResultReportPrint(results);
+      });
 
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('group_with_one_failing_test'), reason: 'test.name');
-        expect(testResult.exitCode != 0, isTrue, reason: 'exitCode');
-        expect(testResult.failCount, equals(1), reason: 'failCount');
-        expect(testResult.successCount, equals(0), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isFalse, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
-
-    skip_test('group with one throwing test', () {
-      var configs = TestConfig.load('group_with_one_throwing_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
-
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('group_with_one_throwing_test'), reason: 'test.name');
-        expect(testResult.exitCode != 0, isTrue, reason: 'exitCode');
-        expect(testResult.failCount, equals(1), reason: 'failCount');
-        expect(testResult.successCount, equals(0), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isFalse, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
-
-    skip_test('group with one succeeding one failing one throwing test', () {
-      var configs = TestConfig.load('group_with_one_succeeding_one_failing_one_throwing_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
-
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('group_with_one_succeeding_one_failing_one_throwing_test'), reason: 'test.name');
-        expect(testResult.exitCode != 0, isTrue, reason: 'exitCode');
-        expect(testResult.failCount, equals(2), reason: 'failCount');
-        expect(testResult.successCount, equals(1), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isFalse, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
-
-    skip_test('group with one skipped test', () {
-      var configs = TestConfig.load('group_with_one_skipped_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
-
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('group_with_one_skipped_test'), reason: 'test.name');
-        expect(testResult.exitCode != 0, isTrue, reason: 'exitCode');
-        expect(testResult.failCount, equals(0), reason: 'failCount');
-        expect(testResult.successCount, equals(0), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isTrue, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
-
-    skip_test('skipped group test', () {
-      var configs = TestConfig.load('skipped_group_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
-
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('skipped_group_test'), reason: 'test.name');
-        expect(testResult.exitCode, equals(0), reason: 'exitCode');
-        expect(testResult.failCount, equals(0), reason: 'failCount');
-        expect(testResult.successCount, equals(0), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isFalse, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
-    });
-
-    test('non-existing test', () {
-      var configs = TestConfig.load('non_existing_test_run_config.json');
-      var config = configs['default'];
-      expect(config, isNotNull);
-
-      config.launchers[0].launch(config.tests[0])
-      .then(expectAsync((ConsoleLauncherResult testResult) {
-        expect(testResult.test, isNotNull, reason: 'test != null');
-        expect(testResult.test.name, equals('non_existing_test'), reason: 'test.name');
-        expect(testResult.exitCode != 0, isTrue, reason: 'exitCode');
-        expect(testResult.failCount, equals(0), reason: 'failCount');
-        expect(testResult.successCount, equals(0), reason: 'successCount');
-        expect(testResult.isSkipped, isFalse, reason: 'isSkipped');
-        expect(testResult.suiteFailed, isTrue, reason: 'suiteFailed');
-        expect(testResult.launcher, isNotNull, reason: 'launcher != null');
-      }));
     });
 
   });

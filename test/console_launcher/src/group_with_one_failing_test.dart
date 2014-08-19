@@ -1,6 +1,5 @@
-
-library bwu_testrunner.groupe_with_one_failing_test;
-
+library bwu_testrunner.group_with_one_failing_test;
+//xxxx
 import 'package:unittest/unittest.dart';
 
 void main() {

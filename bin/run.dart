@@ -30,7 +30,7 @@ String configFilePath;
 void main(List<String> args) {
   workingDir = io.Directory.current;
   writeln('current working directory: ${workingDir}');
-  contentShellPath = 'content_shell';
+//  contentShellPath = 'content_shell';
   contentShellDownloadPath = workingDir.absolute.path;
 
   processArgs(args);

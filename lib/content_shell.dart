@@ -10,7 +10,7 @@ bool doInstallContentShell = false;
 String contentShellDownloadPath;
 String dartSdkPath;
 
-String _contentShellPath = "content_shell";
+String _contentShellPath = 'content_shell';
 String get contentShellPath => _contentShellPath;
 String _contentShellArchivePath;
 bool _isInstallContentShellDone = false;

@@ -1,11 +1,11 @@
 library bwu_testrunner.groupe_with_one_succeeding_test;
 
-import "package:unittest/unittest.dart";
+import 'package:unittest/unittest.dart';
 
 void main() {
-  group("Test - A group with one succeeding test", () {
+  group('Test - A group with one succeeding test', () {
 
-    test("succeding test", () {
+    test('succeding test', () {
       expect(true, isTrue);
     });
   });
