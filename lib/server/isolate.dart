@@ -1,5 +1,6 @@
 library bwu_testrunner.server.isolate;
 
+import 'dart:io' as io;
 import 'dart:isolate';
 import 'package:unittest/unittest.dart' as ut;
 import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
@@ -24,7 +25,12 @@ class IsolateTestrunner {
 
   void onMessage(String json) {
     var msg = new Message.fromJson(json);
+
     switch(msg.messageType) {
+      case StopIsolateRequest.MESSAGE_TYPE:
+        io.exit(0);
+        break;
+
       case FileTestListRequest.MESSAGE_TYPE:
         fileTestListRequestHandler(msg);
         break;
@@ -47,7 +53,7 @@ class IsolateTestrunner {
         if(tc.startTime == null) {
           print('starttime is null');
         }
-      response.testResults.add(new TestResult()
+        response.testResults.add(new TestResult()
           ..id = tc.id
           ..isComplete = tc.isComplete
           ..message = tc.message
@@ -58,6 +64,7 @@ class IsolateTestrunner {
           ..startTime = tc.startTime == null ? new DateTime.fromMillisecondsSinceEpoch(0) : tc.startTime);
       });
       sendPort.send(response.toJson());
+      //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
 
   }
@@ -106,6 +113,7 @@ class IsolateTestrunner {
           }
         });
       sendPort.send(response.toJson());
+      //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
   }
 }

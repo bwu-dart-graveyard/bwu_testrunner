@@ -11,17 +11,16 @@ class TestList extends Message {
   @override
   void fromMap(Map map) {
     consoleTestfiles.addAll(
-        map['consoleTestfiles'].map((e) => new Message.fromJson(e)));
+        map['consoleTestfiles'].map((e) => new Message.createFromMap(e)));
     htmlTestfiles.addAll(
-        map['htmlTestfiles'].map((e) => new Message.fromJson(e)));
+        map['htmlTestfiles'].map((e) => new Message.createFromMap(e)));
   }
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['consoleTestfiles'] = consoleTestfiles.map((e) => e.toJson()).toList();
-    json['htmlTestfiles'] = htmlTestfiles.map((e) => e.toJson()).toList();
-    return json;
+    return super.toMap()
+        ..['consoleTestfiles'] = consoleTestfiles.map((e) => e.toMap()).toList()
+        ..['htmlTestfiles'] = htmlTestfiles.map((e) => e.toMap()).toList();
   }
 
   final consoleTestfiles = <ConsoleTestFile>[];
@@ -41,18 +40,17 @@ class ConsoleTestFile extends Message {
   @override
   void fromMap(Map map) {
     super.fromMap(map);
-    groups.addAll(map['groups'].map((g) => new Message.fromJson(g)));
-    tests.addAll(map['tests'].map((t) => new Message.fromJson(t)));
+    groups.addAll(map['groups'].map((g) => new Message.createFromMap(g)));
+    tests.addAll(map['tests'].map((t) => new Message.createFromMap(t)));
     path = map['path'];
   }
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    json['groups'] = groups.map((g) => g.toJson()).toList();
-    json['tests'] = tests.map((t) => t.toJson()).toList();
-    return json;
+    return super.toMap()
+        ..['path'] = path
+        ..['groups'] = groups.map((g) => g.toMap()).toList()
+        ..['tests'] = tests.map((t) => t.toMap()).toList();
   }
 }
 
@@ -72,9 +70,7 @@ class HtmlTestFile extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    return json;
+    return super.toMap()..['path'] = path;
   }
 }
 
@@ -94,9 +90,7 @@ class FileTestList extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    return json;
+    return super.toMap()..['path'] = path;
   }
 }
 
@@ -118,10 +112,9 @@ class Test extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['name'] = name;
-    json['id'] = id;
-    return json;
+    return super.toMap()
+        ..['name'] = name
+        ..['id'] = id;
   }
 }
 
@@ -139,18 +132,17 @@ class TestGroup extends Message {
   @override
   void fromMap(Map map) {
     super.fromMap(map);
-    groups.addAll(map['groups'].map((g) => new Message.fromJson(g)));
-    tests.addAll(map['tests'].map((t) => new Message.fromJson(t)));
+    groups.addAll(map['groups'].map((g) => new Message.createFromMap(g)));
+    tests.addAll(map['tests'].map((t) => new Message.createFromMap(t)));
     name = map['name'];
   }
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['name'] = name;
-    json['groups'] = groups.map((g) => g.toJson()).toList();
-    json['tests'] = tests.map((t) => t.toJson()).toList();
-    return json;
+    return super.toMap()
+        ..['name'] = name
+        ..['groups'] = groups.map((g) => g.toMap()).toList()
+        ..['tests'] = tests.map((t) => t.toMap()).toList();
   }
 }
 
@@ -167,15 +159,15 @@ class FileTestsResult extends Message {
   void fromMap(Map map) {
     super.fromMap(map);
     path = map['path'];
-    testResults.addAll(map['testResults'].map((tr) => new Message.fromJson(tr)));
+    testResults.addAll(
+        map['testResults'].map((tr) => new Message.createFromMap(tr)));
   }
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    json['testResults'] = testResults.map((tr) => tr.toJson()).toList();
-    return json;
+    return super.toMap()
+        ..['path'] = path
+        ..['testResults'] = testResults.map((tr) => tr.toMap()).toList();
   }
 }
 
@@ -209,16 +201,77 @@ class TestResult extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['id'] = id;
-    json['isComplete'] = isComplete;
-    json['message'] = message;
-    json['passed'] = passed;
-    json['result'] = result;
-    json['runningTime'] = runningTime.inMicroseconds;
-    json['stackTrace'] = stackTrace;
-    json['startTime'] = startTime.millisecondsSinceEpoch;
-    return json;
+    return super.toMap()
+        ..['id'] = id
+        ..['isComplete'] = isComplete
+        ..['message'] = message
+        ..['passed'] = passed
+        ..['result'] = result
+        ..['runningTime'] = runningTime.inMicroseconds
+        ..['stackTrace'] = stackTrace
+        ..['startTime'] = startTime.millisecondsSinceEpoch;
+  }
+}
+
+
+class TestFileChanged extends Message {
+
+  static const MESSAGE_TYPE = 'TestFileChanged';
+
+  String path;
+  String changeType;
+
+  TestFileChanged() : super.protected();
+
+  @override
+  void fromMap(Map map) {
+    super.fromMap(map);
+    path = map['path'];
+    changeType = map['changeType'];
+  }
+
+  @override
+  Map toMap() {
+    return super.toMap()
+        ..['path'] = path
+        ..['changeType'] = changeType;
+  }
+}
+
+class Timeout extends Message {
+
+  static const MESSAGE_TYPE = 'Timeout';
+
+  Timeout() : super.protected();
+}
+
+//class Dummy extends Message {
+//
+//  static const MESSAGE_TYPE = 'Dummy';
+//
+//  Dummy() : super.protected();
+//}
+
+class MessageList extends Message {
+
+  static const MESSAGE_TYPE = 'MessageList';
+
+  MessageList() : super.protected();
+
+  final List<Message> messages = [];
+
+  @override
+  void fromMap(Map map) {
+    super.fromMap(map);
+    messages.addAll(
+        map['messages'].map((m) => new Message.createFromMap(m)));
+
+  }
+
+  @override
+  Map toMap() {
+    return super.toMap()
+        ..['messages'] = messages.map((tr) => tr.toMap()).toList();
   }
 }
 

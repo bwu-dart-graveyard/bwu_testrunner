@@ -3,6 +3,8 @@ library bwu_testrunner.server.testfiles;
 import 'dart:async' as async;
 import 'dart:io' as io;
 import 'package:path/path.dart' as path;
+import 'package:watcher/watcher.dart' as w;
+import 'package:bwu_testrunner/shared/response.dart';
 
 class TestFiles {
 
@@ -21,18 +23,41 @@ class TestFiles {
 
   TestFiles(this.testDirectory) {
     print('watch ${testDirectory.absolute.path}');
-    directoryWatches.add(testDirectory.watch(recursive: true).listen(_testFilesChangedHandler));
-    testDirectory.listSync(recursive: true, followLinks: false)
-    .where((e) => e is io.Directory)
-    .forEach((e) => directoryWatches.add(e.watch().listen(_testFilesChangedHandler)));
+    directoryWatches.add(new w.DirectoryWatcher(testDirectory.path).events.listen(_testFilesChangedHandler));
+//    directoryWatches.add(testDirectory.watch(recursive: true).listen(_testFilesChangedHandler));
+//    testDirectory.listSync(recursive: true, followLinks: false)
+//    .where((e) => e is io.Directory)
+//    .forEach((e) => directoryWatches.add(e.watch().listen(_testFilesChangedHandler)));
     findTestFiles();
   }
 
-  void _testFilesChangedHandler(io.FileSystemEvent e) {
-    // TODO(zoechi) listen/stop listening for added/deleted directories
+  void _testFilesChangedHandler(w.WatchEvent e) {
+    // TODO(zoechi) send notifications so interested parties know what has changed
+    // stop isolate when testfile has changed
+    // add remove test files
     print('testfiles changed');
-    findTestFiles();
-    _onTestfilesChanged.add(null);
+    // TODO findTestFiles();
+
+    var changedFile = new io.File(e.path);
+    if(changedFile.statSync().type == io.FileSystemEntityType.DIRECTORY) {
+      changedFile = new io.Directory(e.path);
+    }
+    if(changedFile is io.Directory) {
+      return;
+    }
+
+    _onTestfilesChanged.add(new TestFileChanged()
+        ..path = e.path
+        ..changeType = e.type.toString());
+
+    switch(e.type) {
+      case w.ChangeType.ADD:
+        break;
+      case w.ChangeType.MODIFY:
+        break;
+      case w.ChangeType.REMOVE:
+        break;
+    }
   }
 
   void findTestFiles() {

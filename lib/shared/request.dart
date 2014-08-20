@@ -18,8 +18,7 @@ class TestListRequest extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    return json;
+    return super.toMap();
   }
 }
 
@@ -42,9 +41,7 @@ class FileTestListRequest extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    return json;
+    return super.toMap()..['path'] = path;
   }
 }
 
@@ -64,10 +61,15 @@ class RunFileTestsRequest extends Message {
 
   @override
   Map toMap() {
-    var json = super.toMap();
-    json['path'] = path;
-    json['testIds'] = testIds.toList();
-    return json;
+    return super.toMap()
+        ..['path'] = path
+        ..['testIds'] = testIds.toList();
   }
-
 }
+
+class StopIsolateRequest extends Message {
+  static const MESSAGE_TYPE = 'StopIsolateRequest';
+
+  StopIsolateRequest() : super.protected();
+}
+

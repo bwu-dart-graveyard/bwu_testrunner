@@ -5,40 +5,52 @@ import 'dart:async' as async;
 import 'testfiles.dart';
 import 'package:bwu_testrunner/server/isolate_launcher.dart';
 import 'package:bwu_testrunner/shared/message.dart';
+import 'package:bwu_testrunner/shared/response_forwarder.dart';
+import 'package:bwu_testrunner/shared/response_collector.dart';
+import 'package:bwu_testrunner/shared/response_completer.dart';
 
+/***
+ * The testrunner server implementation.
+ */
 class TestrunnerServer {
 
+  /// Contains the references to the found test files and the directory watcher.
   TestFiles testfiles;
-  final listenPort = 18070;
 
+  /// The port the server listens to websocket connect requests.
+  final servePort = 18070;
+
+  /// The directory containing the test files.
   io.Directory testDirectory;
 
   TestrunnerServer(this.testDirectory, {Function onReady}) {
     testfiles = new TestFiles(testDirectory);
 
-    io.HttpServer.bind('127.0.0.1', listenPort)
+    io.HttpServer.bind('127.0.0.1', servePort)
     .then((server) {
-      serve(server);
+      _serve(server);
       if(onReady != null) {
-        onReady(listenPort);
+        onReady(servePort);
       }
     });
   }
 
-  void serve(io.HttpServer server) {
+  void _serve(io.HttpServer server) {
     server.listen((request) {
       if(io.WebSocketTransformer.isUpgradeRequest(request)) {
-        io.WebSocketTransformer.upgrade(request).then(handleWebsocket);
+        io.WebSocketTransformer.upgrade(request).then(_handleWebsocket);
       } else {
         print("Regular ${request.method} for: ${request.uri.path}");
       }
     });
   }
 
-  final listeners = <io.WebSocket>[];
+  /// Connected clients.
+  final connectedClients = <io.WebSocket>[];
 
-  void handleWebsocket(io.WebSocket socket) {
-    listeners.add(socket);
+  /// Handle incoming connections.
+  void _handleWebsocket(io.WebSocket socket) {
+    connectedClients.add(socket);
     testfiles.onTestfilesChanged.listen(testFilesChangedHandler);
     socket.listen((String s) {
       var c = new Message.fromJson(s);
@@ -55,92 +67,66 @@ class TestrunnerServer {
       }
     },
     onDone: () {
-      listeners.remove(socket);
+      connectedClients.remove(socket);
       print('Client disconnected');
     });
   }
 
-  Map<String, async.StreamSubscription> _subscriptions = {};
-  Map<String, Message> _respondTo = {};
-  Map<String,Message> _waitForResponse = {};
-  Map<String,String> _isolateMessageId2ClientMessageId = {};
 
-  void runFileTestsRequestHandler(io.WebSocket socket, RunFileTestsRequest clientRequest) {
-    var response = new FileTestsResult()
-        ..responseId = clientRequest.messageId
-        ..socket = socket;
-    _respondTo[response.messageId] = response;
+  // process RunFileTestsRequest
+  void runFileTestsRequestHandler(io.WebSocket socket,
+                                  RunFileTestsRequest clientRequest) {
 
     var isolateLauncher = new IsolateLauncher(
-        testfiles.consoleTestfiles.firstWhere((ctf) => ctf.path == clientRequest.path));
+        testfiles.consoleTestfiles.firstWhere(
+            (ctf) => ctf.path == clientRequest.path));
 
-    _subscriptions[clientRequest.messageId] = isolateLauncher.onReceive.listen((Message isolateResponse) {
-      if(isolateResponse is! FileTestsResult) {
-        return;
-      }
-      _waitForResponse.remove(isolateResponse.responseId);
-      FileTestsResult clientResponse = _respondTo[_isolateMessageId2ClientMessageId[isolateResponse.responseId]];
-      _isolateMessageId2ClientMessageId.remove(isolateResponse.responseId);
-      clientResponse.socket.add(isolateResponse.toJson());
-      _respondTo.remove(clientResponse.messageId);
-      var subscr = _subscriptions.remove(clientResponse.responseId);
-      if(subscr != null) subscr.cancel();
+    new ResponseForwarder(clientRequest, isolateLauncher.onReceive,
+        new SocketMessageSink(socket));
 
-    });
     isolateLauncher.launch()
-
     .then((IsolateLauncher l) {
-      var isolateRequest = clientRequest
-          ..responseId = response.messageId;
-
-//      var isolateRequest = new FileTestListRequest()
-//          ..path = e.path
-//          ..responseId = response.messageId;
-
-      _waitForResponse[isolateRequest.messageId] = isolateRequest;
-      _isolateMessageId2ClientMessageId[isolateRequest.messageId] = response.messageId;
-      l.send(isolateRequest);
+      l.send(clientRequest);
     });
   }
 
+  // process TestListRequest
   void testListRequestHandler(io.WebSocket socket, TestListRequest clientRequest) {
 
-    var response = new TestList()
-        ..responseId = clientRequest.messageId
-        ..socket = socket;
-    _respondTo[response.messageId] = response;
+    var responseCollector = new ResponseCollector(clientRequest);
+
+    new ResponseForwarder(clientRequest, responseCollector.future.asStream(),
+        new SocketMessageSink(socket), responseCallback:
+          (Message request, Message response) {
+      TestList clientResponse = new TestList()
+          ..responseId = request.messageId;
+
+      if(response is MessageList) {
+        response.messages.forEach((Message m) {
+          if(m is ConsoleTestFile) {
+            clientResponse.consoleTestfiles.add(m);
+          } else if(Message is HtmlTestFile) {
+            clientResponse.htmlTestfiles.add(m);
+          } else {
+            throw 'Unsupported messagetype "${response.messageType}".';
+          }
+        });
+        return clientResponse;
+      } else if (response is Timeout) {
+        return response..responseId = request.messageId;
+      }
+    });
 
     testfiles.consoleTestfiles.forEach((e) {
       var isolateLauncher = new IsolateLauncher(e);
 
-      // process isolate response
-      _subscriptions[response.responseId] = isolateLauncher.onReceive.listen((Message isolateResponse) {
-        if(isolateResponse is! ConsoleTestFile) {
-          return;
-        }
-        _waitForResponse.remove(isolateResponse.responseId);
-        TestList clientResponse = _respondTo[_isolateMessageId2ClientMessageId[isolateResponse.responseId]];
-        _isolateMessageId2ClientMessageId.remove(isolateResponse.responseId);
-        clientResponse.consoleTestfiles.add(isolateResponse);
+      var isolateRequest = new FileTestListRequest()
+          ..path = e.path;
 
-        if(!_isolateMessageId2ClientMessageId.values.contains(clientResponse.messageId)) {
-          clientResponse.socket.add(clientResponse.toJson());
-          _respondTo.remove(clientResponse.messageId);
-          var subscr = _subscriptions.remove(clientResponse.responseId);
-          if(subscr != null) subscr.cancel();
-        }
-      });
+      responseCollector.subRequests.add(new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
+
       isolateLauncher.launch()
-
       .then((IsolateLauncher l) {
-        // create isolate request
-
-        var isolateRequest = new FileTestListRequest()
-            ..path = e.path
-            ..responseId = response.messageId;
-
-        _waitForResponse[isolateRequest.messageId] = isolateRequest;
-        _isolateMessageId2ClientMessageId[isolateRequest.messageId] = response.messageId;
         l.send(isolateRequest);
       });
 
@@ -148,12 +134,15 @@ class TestrunnerServer {
 
     testfiles.htmlTestfiles.forEach((e, f) {
       // TODO(zoech) handle HTML tests
+      // can't be run in isolates, needs content_shell
       // response.htmlTestfiles.add(new HtmlTestfile()..path = e.path);
     });
+
+    responseCollector.wait();
   }
 
-  void testFilesChangedHandler(_) {
-    listeners.forEach((l) => l.add('Testfiles changed'));
+  void testFilesChangedHandler(TestFileChanged event) {
+    connectedClients.forEach((l) => l.add(event.toJson()));
   }
 
 }

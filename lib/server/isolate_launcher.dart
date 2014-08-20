@@ -5,9 +5,14 @@ import 'dart:io' as io;
 import 'dart:isolate';
 import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
+import 'package:bwu_testrunner/shared/response_completer.dart';
 
-class IsolateLauncher {
 
+
+
+class IsolateLauncher implements MessageSink {
+
+  // String stores the absolute path of the associated test file
   static final Map<String,IsolateLauncher> _isolates = <String, IsolateLauncher>{};
 
   factory IsolateLauncher(io.File file) {
@@ -20,6 +25,23 @@ class IsolateLauncher {
   }
 
   final io.File testFile;
+
+  static async.Future<bool> invalidate(io.File file) {
+    var launcher = _isolates.remove(file.absolute.path);
+    if(launcher != null) {
+      return launcher.invalidateIsolate();
+    } else {
+      return new async.Future.value(false);
+    }
+  }
+
+  async.Future<bool> invalidateIsolate() {
+    var msg = new StopIsolateRequest();
+    var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
+    send(msg);
+    return future;
+  }
+
   IsolateLauncher._(this.testFile) {
     _isolates[testFile.absolute.path] = this;
   }

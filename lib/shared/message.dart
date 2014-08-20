@@ -17,7 +17,10 @@ abstract class Message {
   }
 
   factory Message.fromJson(String json) {
-    Map map = JSON.decode(json);
+    return new Message.createFromMap(JSON.decode(json));
+  }
+
+  factory Message.createFromMap(Map map) {
     switch(map['messageType']) {
       case TestListRequest.MESSAGE_TYPE:
         return new TestListRequest()..fromMap(map);
@@ -41,6 +44,12 @@ abstract class Message {
         return new FileTestsResult()..fromMap(map);
       case TestResult.MESSAGE_TYPE:
         return new TestResult()..fromMap(map);
+      case TestFileChanged.MESSAGE_TYPE:
+        return new TestFileChanged()..fromMap(map);
+      case Timeout.MESSAGE_TYPE:
+        return new Timeout()..fromMap(map);
+      default:
+        throw 'Message type "${map['messageType']}" is unknown.';
     }
   }
 
@@ -59,13 +68,14 @@ abstract class Message {
       'messageType' : messageType,
       'messageId' : messageId,
       'responseId' : responseId
-      };
-}
+    };
+  }
 
   String toJson() {
-    var map = toMap();
-
-    return JSON.encode(map);
+    return JSON.encode(toMap());
   }
 }
 
+abstract class MessageSink {
+  void send(Message message);
+}
