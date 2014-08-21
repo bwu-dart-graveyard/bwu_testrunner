@@ -23,8 +23,8 @@ class TestList extends Message {
         ..['htmlTestfiles'] = htmlTestfiles.map((e) => e.toMap()).toList();
   }
 
-  final consoleTestfiles = <ConsoleTestFile>[];
-  final htmlTestfiles = <HtmlTestFile>[];
+  final List<ConsoleTestFile> consoleTestfiles = <ConsoleTestFile>[];
+  final List<HtmlTestFile> htmlTestfiles = <HtmlTestFile>[];
 }
 
 class ConsoleTestFile extends Message {

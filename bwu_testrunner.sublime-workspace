@@ -106,7 +106,26 @@
 			"file": "bin/run.dart",
 			"settings":
 			{
-				"buffer_size": 5231,
+				"buffer_size": 5238,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "{\n  // Dartlint plugin settings\n  \"dartlint_active\" : false,\n  \"dartlint_on_load\" : true,\n  \"dartlint_on_save\" : true,\n  \"dartlint_show_popup_level\" : \"WARNING\",\n  // Dartlint gutter icons\n  \"dartlint_gutter_icon_error\" : \"Packages/Dart/gutter/dartlint-simple-error.png\",\n  \"dartlint_gutter_icon_warning\" : \"Packages/Dart/gutter/dartlint-simple-warning.png\",\n  \"dartlint_gutter_icon_info\" : \"Packages/Dart/gutter/dartlint-simple-info.png\",\n  // Underline colors\n  \"dartlint_underline_color_error\" : \"C7321C\",\n  \"dartlint_underline_color_warning\" : \"F18512\",\n  \"dartlint_underline_color_info\" : \"0000FC\",\n\n  // Log level (for debugging).\n  //Can be one of: debug < info < warning < error < critical\n  \"dart_log_level\": \"error\"\n}\n",
+			"settings":
+			{
+				"buffer_size": 728,
+				"line_ending": "Unix",
+				"name": "Dart Settings – Default (read-only)",
+				"read_only": true,
+				"scratch": true
+			}
+		},
+		{
+			"file": "/home/zoechi/.config/sublime-text-3/Packages/User/Dart.sublime-settings",
+			"settings":
+			{
+				"buffer_size": 142,
 				"line_ending": "Unix"
 			}
 		}
@@ -118,11 +137,51 @@
 		"selected_items":
 		[
 			[
-				"dart ana",
+				"ana",
+				"Build: Dart: Analyzer"
+			],
+			[
+				"prefer",
+				"Preferences: Settings - Default"
+			],
+			[
+				"pref",
+				"Preferences: Settings - User"
+			],
+			[
+				"analy",
+				"Build: Dart: Analyzer"
+			],
+			[
+				"anal",
 				"Build: Dart: Analyzer"
 			],
 			[
 				"dart",
+				"Preferences: Dart Settings - Default"
+			],
+			[
+				"delete",
+				"File: Delete"
+			],
+			[
+				"Build: Dart: ",
+				"Build: Dart: Analyzer"
+			],
+			[
+				"upgrade",
+				"Package Control: Upgrade/Overwrite All Packages"
+			],
+			[
+				"upgra",
+				"Package Control: Upgrade/Overwrite All Packages"
+			],
+			[
+				"key",
+				"Preferences: Key Bindings - Default"
+			],
+			[
+				"dart ana",
 				"Build: Dart: Analyzer"
 			],
 			[
@@ -174,10 +233,6 @@
 				"Package Control: Upgrade/Overwrite All Packages"
 			],
 			[
-				"upgrade",
-				"Package Control: Upgrade/Overwrite All Packages"
-			],
-			[
 				"insta",
 				"Package Control: Install Package"
 			],
@@ -191,10 +246,6 @@
 			],
 			[
 				"upda",
-				"Package Control: Upgrade/Overwrite All Packages"
-			],
-			[
-				"upgra",
 				"Package Control: Upgrade/Overwrite All Packages"
 			],
 			[
@@ -341,6 +392,9 @@
 		"height": 566.0,
 		"history":
 		[
+			"print('\\n'*100)",
+			"clear()",
+			"cls",
 			"help",
 			"?",
 			"ls",
@@ -359,10 +413,24 @@
 	"expanded_folders":
 	[
 		"/home/zoechi/source/my/dart/bwu_testrunner",
-		"/home/zoechi/source/my/dart/bwu_testrunner/bin"
+		"/home/zoechi/source/my/dart/bwu_testrunner/bin",
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib",
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib/client",
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib/client/components",
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib/server",
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib/shared"
 	],
 	"file_history":
 	[
+		"/home/zoechi/source/my/dart/bwu_testrunner/lib/args.dart",
+		"/home/zoechi/.config/sublime-text-3/Packages/Dart/Support/Dart.sublime-build",
+		"/home/zoechi/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/zoechi/.config/sublime-text-3/Packages/Default/Preferences.sublime-settings",
+		"/home/zoechi/source/my/dart/bwu_testrunner/[error] Case expressions must be constant ",
+		"/home/zoechi/.config/sublime-text-3/Packages/User/Dart.sublime-build",
+		"/home/zoechi/.config/sublime-text-3/Packages/User/Dart/Dart.sublime-build",
+		"/home/zoechi/.config/sublime-text-3/Packages/Default/Default (Linux).sublime-keymap",
+		"/home/zoechi/.config/sublime-text-3/Packages/User/JSON.sublime-settings",
 		"/home/zoechi/tmp/test.json",
 		"/home/zoechi/source/my/dart/bwu_testrunner/bin/src/util.dart",
 		"/home/zoechi/source/my/dart/bwu_testrunner/bin/src/result.dart",
@@ -374,15 +442,12 @@
 		"/home/zoechi/.config/sublime-text-3/Packages/Package Control/Package Control.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/User/Dart.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/LaTeXing/LaTeXing.sublime-settings",
-		"/home/zoechi/.config/sublime-text-3/Packages/Default/Default (Linux).sublime-keymap",
 		"/home/zoechi/.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap",
 		"/home/zoechi/.config/sublime-text-3/Packages/User/LaTeXing.sublime-settings",
-		"/home/zoechi/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/User/LaTeXTools.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/User/Package Control.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/EditorConfig/INI.sublime-settings",
 		"/home/zoechi/.config/sublime-text-3/Packages/GoSublime/CHANGELOG.md",
-		"/home/zoechi/.config/sublime-text-3/Packages/Default/Preferences.sublime-settings",
 		"/home/zoechi/Downloads/SublimeText/sublime_text_3_build_3062_x64.tar.bz2",
 		"/home/zoechi/source/my/dart/bwu-dart-book/SUMMARY.md",
 		"/home/zoechi/source/my/dart/bwu-dart-book/book.json",
@@ -484,13 +549,7 @@
 		"/home/zoechi/source/my/js/elements/core-layout/core-layout.html",
 		"/home/zoechi/source/my/js/elements/core-layout/demo-body.html",
 		"/home/zoechi/source/my/js/elements/core-layout/demo-css.html",
-		"/home/zoechi/source/my/js/elements/core-layout/demo-parent.html",
-		"/home/zoechi/source/my/js/elements/core-layout/demo.html",
-		"/home/zoechi/source/my/js/elements/core-layout/index.html",
-		"/home/zoechi/source/my/js/elements/core-layout/metadata.html",
-		"/home/zoechi/source/my/js/elements/core-layout-grid/README.md",
-		"/home/zoechi/source/my/js/elements/core-layout-grid/core-layout-grid.html",
-		"/home/zoechi/source/my/js/elements/core-layout-grid/demo.html"
+		"/home/zoechi/source/my/js/elements/core-layout/demo-parent.html"
 	],
 	"find":
 	{
@@ -515,6 +574,14 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"testrunner",
+			"dart",
+			"linux",
+			"dartanalyzer",
+			"file_regex",
+			"build",
+			"f3",
+			"f4",
 			"print(",
 			"io.stdout",
 			"io.stderr",
@@ -634,15 +701,7 @@
 			"colowners",
 			"toggle",
 			"_layout",
-			"v-flex",
-			"-flex ",
-			"-flex",
-			"job",
-			"line",
-			"h-flex",
-			"v-flex",
-			"h-flex",
-			"installcontrollerstyles"
+			"v-flex"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -723,7 +782,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
@@ -732,15 +791,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5231,
+						"buffer_size": 5238,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								2859,
+								2859
 							]
 						],
 						"settings":
@@ -748,6 +807,69 @@
 							"syntax": "Packages/Dart/Dart.tmLanguage",
 							"tab_size": 2,
 							"translate_tabs_to_spaces": true,
+							"wrap_width": 0
+						},
+						"translation.x": 0.0,
+						"translation.y": 1003.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 728,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								54,
+								54
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"wrap_width": 0
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 3,
+					"file": "/home/zoechi/.config/sublime-text-3/Packages/User/Dart.sublime-settings",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 142,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								142,
+								142
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
 							"wrap_width": 0
 						},
 						"translation.x": 0.0,
@@ -777,11 +899,18 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.5,
 			1.0
 		],
 		"rows":

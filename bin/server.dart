@@ -4,7 +4,7 @@ library bwu_testrunner.server.main;
 import 'dart:io' as io;
 import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/server/server.dart';
-import 'package:bwu_testrunner/shared/message.dart';
+//import 'package:bwu_testrunner/shared/message.dart';
 
 TestrunnerServer server;
 
@@ -20,38 +20,39 @@ void main() {
 io.WebSocket socket;
 
 void testClient(int port) {
-  print('server ready');
-  io.WebSocket.connect('ws://localhost:${port}')
-  .then((s) {
-    socket = s;
-    s.listen(onData, onDone: onDone);
-    s.add(new TestListRequest().toJson());
-  });
+  return;
+//  print('server ready');
+//  io.WebSocket.connect('ws://localhost:${port}')
+//  .then((s) {
+//    socket = s;
+//    s.listen(onData, onDone: onDone);
+//    s.add(new TestListRequest().toJson());
+//  });
 }
 
-var testfile;
-
-void onData(String json) {
-  var message = new Message.fromJson(json);
-  print('Client: ${message.toJson()}');
-  switch(message.messageType) {
-    case TestList.MESSAGE_TYPE:
-      testfile = message.consoleTestfiles.firstWhere((e) =>
-          e.path == 'test/console_launcher/src/group_with_one_failing_test.dart');
-      socket.add((new RunFileTestsRequest()
-        ..path = testfile.path
-        ..testIds.add(1))
-        .toJson());
-      break;
-    case FileTestsResult.MESSAGE_TYPE:
-      print(message);
-      socket.add((new RunFileTestsRequest()
-              ..path = testfile.path
-              ..testIds.add(1))
-              .toJson());
-      break;
-  }
-}
+//var testfile;
+//
+//void onData(String json) {
+//  var message = new Message.fromJson(json);
+//  print('Client: ${message.toJson()}');
+//  switch(message.messageType) {
+//    case TestList.MESSAGE_TYPE:
+//      testfile = message.consoleTestfiles.firstWhere((e) =>
+//          e.path == 'test/console_launcher/src/group_with_one_failing_test.dart');
+//      socket.add((new RunFileTestsRequest()
+//        ..path = testfile.path
+//        ..testIds.add(1))
+//        .toJson());
+//      break;
+//    case FileTestsResult.MESSAGE_TYPE:
+//      print(message);
+//      socket.add((new RunFileTestsRequest()
+//              ..path = testfile.path
+//              ..testIds.add(1))
+//              .toJson());
+//      break;
+//  }
+//}
 
 void onDone() {
   print('Client done');

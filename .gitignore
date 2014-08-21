@@ -1,8 +1,6 @@
 packages
-build
-out
-deploy
-_from_packages
+build/
+.pub/
 #pubspec.lock
 .project
 .buildlog

@@ -32,6 +32,10 @@ class TestFiles {
   }
 
   void _testFilesChangedHandler(w.WatchEvent e) {
+    if(e.path.contains('/packages/')) {
+      print('Ignore file change in "${e.path}".');
+      return;
+    }
     // TODO(zoechi) send notifications so interested parties know what has changed
     // stop isolate when testfile has changed
     // add remove test files

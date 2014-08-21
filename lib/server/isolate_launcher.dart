@@ -7,9 +7,6 @@ import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
 import 'package:bwu_testrunner/shared/response_completer.dart';
 
-
-
-
 class IsolateLauncher implements MessageSink {
 
   // String stores the absolute path of the associated test file
@@ -23,6 +20,9 @@ class IsolateLauncher implements MessageSink {
       return new IsolateLauncher._(file);
     }
   }
+
+  String _isolateId;
+  String get isolateId => _isolateId;
 
   final io.File testFile;
 
@@ -52,8 +52,7 @@ class IsolateLauncher implements MessageSink {
   ReceivePort response = new ReceivePort();
   SendPort sendPort;
 
-  bool _isRunning = false;
-  bool get isRunning => _isRunning;
+
 
   void send(Message message) {
     if(!isRunning) {
@@ -62,13 +61,21 @@ class IsolateLauncher implements MessageSink {
     sendPort.send(message.toJson());
   }
 
+  bool get isRunning => _launchCompleter != null;
   async.Completer _launchCompleter;
 
   async.Future<IsolateLauncher> launch() {
     if(isRunning) {
+      if(!_launchCompleter.isCompleted) {
+        return _launchCompleter.future;
+      }
       return new async.Future.value(this);
     }
     _launchCompleter = new async.Completer();
+    _isolateId = Message.UUID.v4().toString();
+
+    print('Launch isolate for "${testFile.path}');
+
     io.File main;
     io.Directory tmpDir;
     var tmpMainName;
@@ -94,10 +101,10 @@ class IsolateLauncher implements MessageSink {
 
       return Isolate.spawnUri(uri, ['foo'], response.sendPort)
       .then((i) {
-        _isRunning = true;
         response.listen((e) {
           if(e is SendPort) {
             sendPort = e;
+            print('Isolate for "${testFile.path} launched');
             _launchCompleter.complete(this);
           } else {
             _onReceive.add(new Message.fromJson(e));
@@ -109,10 +116,14 @@ class IsolateLauncher implements MessageSink {
         .then((_) => this);
       })
       .catchError((e, s) {
-        _isRunning = false;
         print('$e\n$s');
-        return deleteMain(main)
-        .then(throw e);
+        deleteMain(main)
+        .then((_) {
+          _launchCompleter = null;
+          _isolateId = null;
+          _launchCompleter.completeError(e);
+        });
+
       });
     });
     return _launchCompleter.future;

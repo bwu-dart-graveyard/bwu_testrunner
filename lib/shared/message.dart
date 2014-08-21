@@ -1,6 +1,5 @@
 library bwu_testrunner.shared.command;
 
-import 'dart:io' as io;
 import 'dart:convert' show JSON;
 import 'package:uuid/uuid.dart' show Uuid;
 import 'package:bwu_testrunner/shared/request.dart';
@@ -56,7 +55,6 @@ abstract class Message {
   String get messageType => runtimeType.toString();
   String messageId;
   String responseId;
-  io.WebSocket socket;
 
   void fromMap(Map map) {
     messageId = map['messageId'];

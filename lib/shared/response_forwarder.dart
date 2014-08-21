@@ -17,6 +17,7 @@ class SocketMessageSink extends MessageSink {
 typedef Message ResponseCallback(Message request, Message response);
 
 /// Waits for a response and forwards it to a MessageSink.
+/// The ResponseCallback allows to modify the response before it is sent.
 class ResponseForwarder {
 
   static final List<ResponseForwarder> _listeners = [];

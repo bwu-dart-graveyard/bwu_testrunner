@@ -1,0 +1,53 @@
+<!-- import polymer-element's definition -->
+<link rel="import" href="../../../../packages/polymer/polymer.html">
+<link rel="import" href="../../../../packages/bwu_datagrid/bwu_datagrid.html">
+<link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_pager/bwu_pager.html'>
+<link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_column_picker/bwu_column_picker.html'>
+
+<polymer-element name="app-element">
+  <template>
+    <!--<link rel="stylesheet" href="../../../../packages/bwu_datagrid/asset/smoothness/jquery-ui-1.8.16.custom.css"">-->
+
+    <style>
+      * /deep/ * {
+        font-family: arial;
+        font-size: 8pt;
+      }
+
+      #header {
+        border: 1px solid gray;
+        padding: 0px;
+        margin: 0px;
+        height: 100px;
+      }
+
+      #grid {
+        height: calc(100vh - 150px);
+        border: 1px solid gray;
+        /*outline: 0;*/
+      }
+
+      * /deep/ .cell-effort-driven {
+        text-align: center;
+      }
+
+      * /deep/ .bwu-datagrid-group-title[level='0'] {
+        font-weight: bold;
+      }
+
+      * /deep/ .bwu-datagrid-group-title[level='1'] {
+        text-decoration: underline;
+      }
+
+      * /deep/ .bwu-datagrid-group-title[level='2'] {
+        font-style: italic;
+      }
+    </style>
+    <div id="header">
+      header
+    </div>
+    <bwu-datagrid id="grid"></bwu-datagrid>
+    <bwu-pager id='pager' style='width:100%;'></bwu-pager>
+  </template>
+  <script type="application/dart" src="app_element.dart"></script>
+</polymer-element>

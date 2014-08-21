@@ -1,7 +1,6 @@
 library bwu_testrunner.server;
 
 import 'dart:io' as io;
-import 'dart:async' as async;
 import 'testfiles.dart';
 import 'package:bwu_testrunner/server/isolate_launcher.dart';
 import 'package:bwu_testrunner/shared/message.dart';
@@ -11,6 +10,7 @@ import 'package:bwu_testrunner/shared/response_completer.dart';
 
 /***
  * The testrunner server implementation.
+ * Accepts WebSocket connections from the client
  */
 class TestrunnerServer {
 
@@ -22,6 +22,7 @@ class TestrunnerServer {
 
   /// The directory containing the test files.
   io.Directory testDirectory;
+
 
   TestrunnerServer(this.testDirectory, {Function onReady}) {
     testfiles = new TestFiles(testDirectory);
@@ -41,6 +42,7 @@ class TestrunnerServer {
         io.WebSocketTransformer.upgrade(request).then(_handleWebsocket);
       } else {
         print("Regular ${request.method} for: ${request.uri.path}");
+        // TODO(zoechi) return some error message
       }
     });
   }

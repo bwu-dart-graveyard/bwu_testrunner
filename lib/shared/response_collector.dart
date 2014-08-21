@@ -3,6 +3,8 @@ library bwu_testrunner.shared.response_collector;
 import 'dart:async' as async;
 import 'package:bwu_testrunner/shared/message.dart';
 
+
+/// Waits for a list of responses and notifies when all expected responses were retrieved.
 class ResponseCollector {
 
   static final List<ResponseCollector> _listeners = [];
@@ -33,9 +35,6 @@ class ResponseCollector {
   }
 
   void _cleanup() {
-//    if(_responseSubscription != null) {
-//      _responseSubscription.cancel();
-//    }
     _listeners.remove(this);
   }
 
