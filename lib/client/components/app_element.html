@@ -4,6 +4,12 @@
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_pager/bwu_pager.html'>
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_column_picker/bwu_column_picker.html'>
 
+<link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>
+<link rel="import" href="../../../../packages/core_elements/core_icons/iconsets/av_icons.html">
+<!--<link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
+<link rel="import" href="../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html">
+<link rel="import" href="../../../../packages/core_elements/core_icon.html">-->
+
 <polymer-element name="app-element">
   <template>
     <!--<link rel="stylesheet" href="../../../../packages/bwu_datagrid/asset/smoothness/jquery-ui-1.8.16.custom.css"">-->
@@ -42,9 +48,33 @@
       * /deep/ .bwu-datagrid-group-title[level='2'] {
         font-style: italic;
       }
+
+
+      paper-fab::shadow core-icon svg {
+        fill: lightgray;
+      }
+
+      paper-fab:hover::shadow core-icon svg {
+        fill: white;
+      }
+
+      paper-fab:hover.running core-icon svg {
+        fill: green;
+      }
+
+      paper-fab:hover {
+        background-color: blue;
+      }
+
     </style>
     <div id="header">
-      header
+      <!--<bwu-fontawesome-iconset-svg iconSize="80"></bwu-fontawesome-iconset-svg>
+
+      <paper-icon-button id="fa:play" icon="fa:glass"></paper-icon-button>
+      <core-icon id="run" icon="av:play-arrow" style="width=80px; height=80px;"></core-icon>
+      <paper-icon-button icon="av:play-arrow"></paper-icon-button>
+      <core-icon id="run2" icon="fa:glass" iconSize="150" style="width=80px; height=80px;"></core-icon> -->
+      <paper-fab icon="av:play-arrow"></paper-fab>
     </div>
     <bwu-datagrid id="grid"></bwu-datagrid>
     <bwu-pager id='pager' style='width:100%;'></bwu-pager>

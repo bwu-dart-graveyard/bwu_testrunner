@@ -8,6 +8,7 @@ import 'message.dart';
 class TestListRequest extends Message {
 
   static const MESSAGE_TYPE = 'TestListRequest';
+  String get messageType => MESSAGE_TYPE;
 
   TestListRequest() : super.protected();
 
@@ -28,6 +29,7 @@ class TestListRequest extends Message {
 class FileTestListRequest extends Message {
 
   static const MESSAGE_TYPE = 'FileTestListRequest';
+  String get messageType => MESSAGE_TYPE;
 
   String path;
 
@@ -47,6 +49,8 @@ class FileTestListRequest extends Message {
 
 class RunFileTestsRequest extends Message {
   static const MESSAGE_TYPE = 'RunFileTestsRequest';
+  String get messageType => MESSAGE_TYPE;
+
   String path;
   final List<int> testIds = <int>[];
 
@@ -69,6 +73,7 @@ class RunFileTestsRequest extends Message {
 
 class StopIsolateRequest extends Message {
   static const MESSAGE_TYPE = 'StopIsolateRequest';
+  String get messageType => MESSAGE_TYPE;
 
   StopIsolateRequest() : super.protected();
 }

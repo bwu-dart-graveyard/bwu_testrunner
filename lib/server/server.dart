@@ -2,6 +2,7 @@ library bwu_testrunner.server;
 
 import 'dart:io' as io;
 import 'testfiles.dart';
+import 'package:http_server/http_server.dart' as ht;
 import 'package:bwu_testrunner/server/isolate_launcher.dart';
 import 'package:bwu_testrunner/shared/message.dart';
 import 'package:bwu_testrunner/shared/response_forwarder.dart';
@@ -37,12 +38,19 @@ class TestrunnerServer {
   }
 
   void _serve(io.HttpServer server) {
+    ht.VirtualDirectory vd = new ht.VirtualDirectory('packages/bwu_testrunner/client/content/web');
     server.listen((request) {
       if(io.WebSocketTransformer.isUpgradeRequest(request)) {
         io.WebSocketTransformer.upgrade(request).then(_handleWebsocket);
       } else {
         print("Regular ${request.method} for: ${request.uri.path}");
-        // TODO(zoechi) return some error message
+        if(request.uri.path == '/') {
+          request.response
+              ..redirect(Uri.parse('http://localhost:${servePort}/index.html'), status: io.HttpStatus.MOVED_PERMANENTLY)
+              ..close();
+        } else {
+          vd.serveRequest(request);
+        }
       }
     });
   }

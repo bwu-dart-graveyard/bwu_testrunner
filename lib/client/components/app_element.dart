@@ -73,6 +73,8 @@ class AppElement extends PolymerElement {
     super.attached();
     grid = $['grid'];
 
+    dom.window.onResize.listen(grid.resizeCanvas);
+
     var groupItemMetadataProvider = new GroupItemMetadataProvider();
     dataView = new DataView(options: new DataViewOptions(
       groupItemMetadataProvider: groupItemMetadataProvider,

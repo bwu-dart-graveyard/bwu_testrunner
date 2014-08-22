@@ -5,6 +5,7 @@ import 'message.dart';
 class TestList extends Message {
 
   static const MESSAGE_TYPE = 'TestList';
+  String get messageType => MESSAGE_TYPE;
 
   TestList() : super.protected();
 
@@ -30,6 +31,7 @@ class TestList extends Message {
 class ConsoleTestFile extends Message {
 
   static const MESSAGE_TYPE = 'ConsoleTestFile';
+  String get messageType => MESSAGE_TYPE;
 
   String path;
   final List<TestGroup> groups = [];
@@ -57,6 +59,7 @@ class ConsoleTestFile extends Message {
 class HtmlTestFile extends Message {
 
   static const MESSAGE_TYPE = 'HtmlTestFile';
+  String get messageType => MESSAGE_TYPE;
 
   String path;
 
@@ -77,6 +80,8 @@ class HtmlTestFile extends Message {
 class FileTestList extends Message {
 
   static const MESSAGE_TYPE = 'FileTestList';
+  String get messageType => MESSAGE_TYPE;
+
 
   String path;
 
@@ -97,6 +102,7 @@ class FileTestList extends Message {
 class Test extends Message {
 
   static const MESSAGE_TYPE = 'Test';
+  String get messageType => MESSAGE_TYPE;
 
   String name;
   int id;
@@ -121,6 +127,7 @@ class Test extends Message {
 class TestGroup extends Message {
 
   static const MESSAGE_TYPE = 'TestGroup';
+  String get messageType => MESSAGE_TYPE;
 
   String name;
 
@@ -149,6 +156,7 @@ class TestGroup extends Message {
 class FileTestsResult extends Message {
 
   static const MESSAGE_TYPE = 'FileTestsResult';
+  String get messageType => MESSAGE_TYPE;
 
   String path;
   final List<TestResult> testResults = [];
@@ -174,6 +182,7 @@ class FileTestsResult extends Message {
 class TestResult extends Message {
 
   static const MESSAGE_TYPE = 'TestResult';
+  String get messageType => MESSAGE_TYPE;
 
   int id;
   bool isComplete;
@@ -217,6 +226,7 @@ class TestResult extends Message {
 class TestFileChanged extends Message {
 
   static const MESSAGE_TYPE = 'TestFileChanged';
+  String get messageType => MESSAGE_TYPE;
 
   String path;
   String changeType;
@@ -241,6 +251,7 @@ class TestFileChanged extends Message {
 class Timeout extends Message {
 
   static const MESSAGE_TYPE = 'Timeout';
+  String get messageType => MESSAGE_TYPE;
 
   Timeout() : super.protected();
 }
@@ -255,6 +266,7 @@ class Timeout extends Message {
 class MessageList extends Message {
 
   static const MESSAGE_TYPE = 'MessageList';
+  String get messageType => MESSAGE_TYPE;
 
   MessageList() : super.protected();
 

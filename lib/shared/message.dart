@@ -10,6 +10,7 @@ export 'package:bwu_testrunner/shared/response.dart';
 
 abstract class Message {
   static Uuid UUID = new Uuid();
+  static const MESSAGE_TYPE = 'Message';
 
   Message.protected() {
     messageId = UUID.v4();
@@ -52,7 +53,7 @@ abstract class Message {
     }
   }
 
-  String get messageType => runtimeType.toString();
+  String get messageType => throw '"messageType" must be overridden in derived classes.';
   String messageId;
   String responseId;
 
