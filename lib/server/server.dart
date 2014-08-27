@@ -16,7 +16,7 @@ import 'package:bwu_testrunner/shared/response_completer.dart';
 class TestrunnerServer {
 
   /// Contains the references to the found test files and the directory watcher.
-  TestFiles testfiles;
+  TestFiles testFiles;
 
   /// The port the server listens to websocket connect requests.
   final servePort = 18070;
@@ -24,9 +24,8 @@ class TestrunnerServer {
   /// The directory containing the test files.
   io.Directory testDirectory;
 
-
   TestrunnerServer(this.testDirectory, {Function onReady}) {
-    testfiles = new TestFiles(testDirectory);
+    testFiles = new TestFiles(testDirectory);
 
     io.HttpServer.bind('127.0.0.1', servePort)
     .then((server) {
@@ -35,6 +34,8 @@ class TestrunnerServer {
         onReady(servePort);
       }
     });
+
+    _launchTestIsolates();
   }
 
   void _serve(io.HttpServer server) {
@@ -56,12 +57,13 @@ class TestrunnerServer {
   }
 
   /// Connected clients.
-  final connectedClients = <io.WebSocket>[];
+  final _connectedClients = <io.WebSocket>[];
 
   /// Handle incoming connections.
   void _handleWebsocket(io.WebSocket socket) {
-    connectedClients.add(socket);
-    testfiles.onTestfilesChanged.listen(testFilesChangedHandler);
+    print('Client connected');
+    _connectedClients.add(socket);
+    testFiles.onTestfilesChanged.listen(testFilesChangedHandler);
     socket.listen((String s) {
       var c = new Message.fromJson(s);
       print('Client sent: $s');
@@ -72,32 +74,64 @@ class TestrunnerServer {
           break;
 
         case RunFileTestsRequest.MESSAGE_TYPE:
-          runFileTestsRequestHandler(socket, c);
+          _runFileTestsRequestHandler(socket, c);
           break;
       }
     },
     onDone: () {
-      connectedClients.remove(socket);
+      _connectedClients.remove(socket);
       print('Client disconnected');
     });
   }
 
+  void _isolateBroadcastMessageHandler(Message message) {
+    print('broadcast: ${message.toJson()}');
+    _connectedClients.forEach((c) => c.add(message.toJson()));
+  }
 
-  // process RunFileTestsRequest
-  void runFileTestsRequestHandler(io.WebSocket socket,
+  /// Create an isolate for each found test file
+  void _launchTestIsolates() {
+    testFiles.consoleTestfiles.forEach((e) {
+      new IsolateLauncher(e, _isolateBroadcastMessageHandler).launch()
+      .then((IsolateLauncher l) {
+        l.send(new TestFileRequest()
+        ..path = e.path);
+      });
+    });
+
+    testFiles.htmlTestfiles.forEach((e, f) {
+      // TODO(zoech) handle HTML tests
+      // can't be run in isolates, needs content_shell
+      // response.htmlTestFiles.add(new HtmlTestFile()..path = e.path);
+    });
+  }
+
+  /***
+   * Process RunFileTestsRequest.
+   * A RunFileTestRequest runs all or the specified tests of one test file.
+   * For each test a progress message is sent and a final response to indicate
+   * that the request is finished.
+   */
+  void _runFileTestsRequestHandler(io.WebSocket socket,
                                   RunFileTestsRequest clientRequest) {
 
-    var isolateLauncher = new IsolateLauncher(
-        testfiles.consoleTestfiles.firstWhere(
-            (ctf) => ctf.path == clientRequest.path));
+    var tf = testFiles.consoleTestfiles.where(
+                (ctf) => ctf.path == clientRequest.path);
+    if(tf.length == 0) {
+      socket.add((new ErrorMessage()
+          ..responseId = clientRequest.messageId
+          ..errorMessage = 'Testfile "${clientRequest.path}" not found.').toJson());
+    } else {
+      var isolateLauncher = new IsolateLauncher(tf.first, _isolateBroadcastMessageHandler);
 
-    new ResponseForwarder(clientRequest, isolateLauncher.onReceive,
-        new SocketMessageSink(socket));
+      new ResponseForwarder(clientRequest, isolateLauncher.onReceive,
+          new SocketMessageSink(socket));
 
-    isolateLauncher.launch()
-    .then((IsolateLauncher l) {
-      l.send(clientRequest);
-    });
+      isolateLauncher.launch()
+      .then((IsolateLauncher l) {
+        l.send(clientRequest);
+      });
+    }
   }
 
   // process TestListRequest
@@ -114,9 +148,9 @@ class TestrunnerServer {
       if(response is MessageList) {
         response.messages.forEach((Message m) {
           if(m is ConsoleTestFile) {
-            clientResponse.consoleTestfiles.add(m);
+            clientResponse.consoleTestFiles.add(m);
           } else if(Message is HtmlTestFile) {
-            clientResponse.htmlTestfiles.add(m);
+            clientResponse.htmlTestFiles.add(m);
           } else {
             throw 'Unsupported messagetype "${response.messageType}".';
           }
@@ -127,10 +161,10 @@ class TestrunnerServer {
       }
     });
 
-    testfiles.consoleTestfiles.forEach((e) {
-      var isolateLauncher = new IsolateLauncher(e);
+    testFiles.consoleTestfiles.forEach((e) {
+      var isolateLauncher = new IsolateLauncher(e, _isolateBroadcastMessageHandler);
 
-      var isolateRequest = new FileTestListRequest()
+      var isolateRequest = new TestFileRequest()
           ..path = e.path;
 
       responseCollector.subRequests.add(new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
@@ -142,7 +176,7 @@ class TestrunnerServer {
 
     });
 
-    testfiles.htmlTestfiles.forEach((e, f) {
+    testFiles.htmlTestfiles.forEach((e, f) {
       // TODO(zoech) handle HTML tests
       // can't be run in isolates, needs content_shell
       // response.htmlTestfiles.add(new HtmlTestfile()..path = e.path);
@@ -152,7 +186,7 @@ class TestrunnerServer {
   }
 
   void testFilesChangedHandler(TestFileChanged event) {
-    connectedClients.forEach((l) => l.add(event.toJson()));
+    _connectedClients.forEach((l) => l.add(event.toJson()));
   }
 
 }

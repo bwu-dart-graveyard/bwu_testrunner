@@ -3,14 +3,26 @@ library bwu_testrunner.shared.response_completer;
 import 'dart:async' as async;
 import 'package:bwu_testrunner/shared/message.dart';
 
+/**
+ * Creates a [async.Completer] and when a response to the message arrives
+ * completes the [future] completes with the received message.
+ * When the response doesn't arrive within the timeout [Duration] the
+ * [async.Future] completes with a [Timeout] message.
+ */
 class ResponseCompleter {
 
+  /// A static list that references all active [ResponseCompleter]s.
   static final List<ResponseCompleter> _listeners = [];
 
   final async.Completer completer = new async.Completer<Message>();
+
+  /// The [async.Future] to wait for the response to arrive.
   async.Future get future => completer.future;
+
+  /// The stream where the response will arrive.
   async.StreamSubscription _responseSubscription;
 
+  /// The id of the request message to wait for responses.
   final String _responseId;
 
   ResponseCompleter(this._responseId, async.Stream responseStream, {Duration timeout}) {
@@ -23,6 +35,8 @@ class ResponseCompleter {
     completer.future.timeout(to, onTimeout: _timeoutHandler);
   }
 
+  /// Check if the received message is the response we are waiting for and
+  /// complete the [async.Future] if it is.
   void _responseHandler(Message message) {
     if(message.responseId != _responseId) {
       return;

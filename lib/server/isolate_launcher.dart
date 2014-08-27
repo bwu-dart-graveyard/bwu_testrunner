@@ -7,25 +7,37 @@ import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
 import 'package:bwu_testrunner/shared/response_completer.dart';
 
-class IsolateLauncher implements MessageSink {
+/**
+ * Launches isolates for one specified test file.
+ */
+class IsolateLauncher {
 
   // String stores the absolute path of the associated test file
   static final Map<String,IsolateLauncher> _isolates = <String, IsolateLauncher>{};
 
-  factory IsolateLauncher(io.File file) {
+  /// Create a new instance or return an existing one.
+  factory IsolateLauncher(io.File file, MessageSink broadcastSink) {
     var launcher = _isolates[file.absolute.path];
     if(launcher != null) {
       return launcher;
     } else {
-      return new IsolateLauncher._(file);
+      return new IsolateLauncher._(file, broadcastSink);
     }
+  }
+
+  /// The test file this isolate was created for.
+  final io.File testFile;
+  final MessageSink _broadcastSink;
+
+  IsolateLauncher._(this.testFile, this._broadcastSink) {
+    _isolates[testFile.absolute.path] = this;
   }
 
   String _isolateId;
   String get isolateId => _isolateId;
 
-  final io.File testFile;
-
+  /// Allows to invalidate an isolate for a test file without a concrete
+  /// reference to the [IsolateLauncher] instance.
   static async.Future<bool> invalidate(io.File file) {
     var launcher = _isolates.remove(file.absolute.path);
     if(launcher != null) {
@@ -35,36 +47,40 @@ class IsolateLauncher implements MessageSink {
     }
   }
 
-  async.Future<bool> invalidateIsolate() {
-    var msg = new StopIsolateRequest();
-    var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
-    send(msg);
-    return future;
+  /// When the test file was updated or removed the isolate needs to be
+  /// stopped and launched again with the new test file.
+  /// This method only stops the isolate. The new instance is created on demand.
+  void invalidateIsolate() {
+    //var msg = new StopIsolateRequest();
+    //var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
+    send(new StopIsolateRequest());
   }
 
-  IsolateLauncher._(this.testFile) {
-    _isolates[testFile.absolute.path] = this;
-  }
-
+  /// Handle notifications of received messages.
   async.StreamController<Message> _onReceive = new async.StreamController<Message>.broadcast();
+  /// Returns a stream to allow external consumers listen to received messages.
   async.Stream get onReceive => _onReceive.stream;
 
-  ReceivePort response = new ReceivePort();
-  SendPort sendPort;
+  /// The port to receive messages of the launched isolate.
+  ReceivePort _response = new ReceivePort();
 
+  /// The port to send messages to the launched isolate.
+  SendPort _sendPort;
 
-
+  /// Sends a message to the isolate.
   void send(Message message) {
     if(!isRunning) {
       throw 'Isolate for file "${testFile.path}" is not running.';
     }
-    sendPort.send(message.toJson());
+    _sendPort.send(message.toJson());
   }
 
+  /// Returns true when the isolate is running.
   bool get isRunning => _launchCompleter != null;
   async.Completer _launchCompleter;
 
-  async.Future<IsolateLauncher> launch() {
+  /// Launches the isolate when it is not yet running.
+  async.Future<IsolateLauncher> _launch() {
     if(isRunning) {
       if(!_launchCompleter.isCompleted) {
         return _launchCompleter.future;
@@ -91,7 +107,7 @@ class IsolateLauncher implements MessageSink {
         tmpMainName = '${path.basename(tmpDir.path)}_main.dart';
         main = new io.File(tmpMainName);
         return tmpDir.delete()
-        .then((e) => main.writeAsString(mainContent(testFile), flush: true));
+        .then((e) => main.writeAsString(_mainContent(testFile), flush: true));
       });
     })
     .then((_) {
@@ -99,15 +115,16 @@ class IsolateLauncher implements MessageSink {
       var uri = Uri.parse('file://${main.absolute.path}');
       //print('uri: ${uri}');
 
-      return Isolate.spawnUri(uri, ['foo'], response.sendPort)
+      return Isolate.spawnUri(uri, [testFile.path], _response.sendPort)
       .then((i) {
-        response.listen((e) {
+        _response.listen((e) {
           if(e is SendPort) {
-            sendPort = e;
+            _sendPort = e;
             print('Isolate for "${testFile.path} launched');
             _launchCompleter.complete(this);
           } else {
-            _onReceive.add(new Message.fromJson(e));
+            _onReceive.add(new Message.fromJson(e)); // TODO(zoechi) remove
+            _broadcastSink(new Message.fromJson(e));
           }
         });
       })
@@ -129,6 +146,7 @@ class IsolateLauncher implements MessageSink {
     return _launchCompleter.future;
   }
 
+  // delete temporary main
   async.Future deleteMain(io.File main) {
     return main.exists()
     .then((exists) {
@@ -140,7 +158,10 @@ class IsolateLauncher implements MessageSink {
     });
   }
 
-  String mainContent(io.File testFile) {
+
+/// The template for the main method used to launch the isolate.
+/// The reference to the test file is added as a library import.
+String _mainContent(io.File testFile) {
   return '''
 import 'dart:isolate';
 

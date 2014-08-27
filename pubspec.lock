@@ -4,7 +4,7 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.22.1"
+    version: "0.22.2"
   args:
     description: args
     source: hosted
@@ -22,9 +22,11 @@ packages:
     source: hosted
     version: "0.10.0+2"
   bwu_datagrid:
-    description: bwu_datagrid
-    source: hosted
-    version: "0.0.13"
+    description:
+      path: "../bwu_datagrid"
+      relative: true
+    source: path
+    version: "0.0.14"
   bwu_fontawesome_iconset_svg:
     description: bwu_fontawesome_iconset_svg
     source: hosted
@@ -80,7 +82,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.11.4"
+    version: "0.11.5"
   logging:
     description: logging
     source: hosted

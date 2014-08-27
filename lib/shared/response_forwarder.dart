@@ -4,20 +4,23 @@ import 'dart:io' as io;
 import 'dart:async' as async;
 import 'package:bwu_testrunner/shared/message.dart';
 
-class SocketMessageSink extends MessageSink {
+class SocketMessageSink  {
   io.WebSocket _socket;
 
   SocketMessageSink(this._socket);
 
-  void send(Message message) {
+  void call(Message message) {
+    print('Forward: ${message.toJson()}');
     _socket.add(message.toJson());
   }
 }
 
 typedef Message ResponseCallback(Message request, Message response);
 
-/// Waits for a response and forwards it to a MessageSink.
-/// The ResponseCallback allows to modify the response before it is sent.
+/**
+ * Waits for a response and forwards it to a MessageSink.
+ * The ResponseCallback allows to modify the response before it is sent.
+ */
 class ResponseForwarder {
 
   static final List<ResponseForwarder> _listeners = [];
@@ -53,7 +56,7 @@ class ResponseForwarder {
     if(_timeout != null) {
       _timeout.cancel();
     }
-    _messageSink.send(_responseCallback(_request, response));
+    _messageSink(_responseCallback(_request, response));
   }
 
   void _cleanup() {
@@ -69,7 +72,7 @@ class ResponseForwarder {
   void _timeoutHandler() {
     _cleanup();
 
-    _messageSink.send(_responseCallback(_request, new Timeout()));
+    _messageSink(_responseCallback(_request, new Timeout()));
   }
 
   void cancel() {

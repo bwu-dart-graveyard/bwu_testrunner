@@ -6,48 +6,67 @@ import 'package:unittest/unittest.dart' as ut;
 import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
 import 'package:bwu_testrunner/shared/message.dart';
 
-// Isolate implementation
+/**
+ * Isolate implementation. When the [IsolateLauncher] launches an isolate,
+ * all the main method does is to create an instance of [IsolateTestrunner].
+ * All further processing is done from here.
+ */
 class IsolateTestrunner {
 
-  final SendPort sendPort;
-  Function main;
-  List<String> args;
-  ReceivePort receivePort = new ReceivePort();
-  utc.UnittestConfiguration config;
+  /// The port to the [IsolateLauncher]
+  final SendPort _sendPort;
+  /// the reference to the main method to execute the tests.
+  final Function _main;
+  /// The first argument is the path of the test file.
+  final List<String> _args;
+  /// The port to receive messages from the main isolate ([IsolateLauncher])
+  final ReceivePort receivePort = new ReceivePort();
+  /// The unit test configuration used when running tests.
+  utc.UnittestConfiguration _config;
 
-  IsolateTestrunner(this.sendPort, this.main, this.args) {
-    receivePort.listen(onMessage);
+  String _filePath;
+
+  IsolateTestrunner(this._sendPort, this._main, this._args) {
+    _filePath = _args[0];
+    receivePort.listen(_onMessage);
     ut.groupSep = "~|~";
-    config = new utc.UnittestConfiguration(main);
-    ut.unittestConfiguration = config;
-    sendPort.send(receivePort.sendPort);
+    _config = new utc.UnittestConfiguration(_main);
+    ut.unittestConfiguration = _config;
+    _sendPort.send(receivePort.sendPort);
+    _config
+        ..onTestProgress.listen((m) => _sendPort.send((m..path = _filePath).toJson()))
+        ..onFileTestResult.listen((m) => _sendPort.send((m..path = _filePath).toJson()));
   }
 
-  void onMessage(String json) {
+  /// Dispatch incoming message processing.
+  void _onMessage(String json) {
     var msg = new Message.fromJson(json);
 
     switch(msg.messageType) {
       case StopIsolateRequest.MESSAGE_TYPE:
+        receivePort.close();
         io.exit(0);
         break;
 
-      case FileTestListRequest.MESSAGE_TYPE:
-        fileTestListRequestHandler(msg);
+      case TestFileRequest.MESSAGE_TYPE:
+        _fileTestListRequestHandler(msg);
         break;
 
       case RunFileTestsRequest.MESSAGE_TYPE:
-        runFileTestsRequestHandler(msg);
+        _runFileTestsRequestHandler(msg);
         break;
     }
     //print('child isolate - message "${msg.messageType}" received: $json');
   }
 
-  void runFileTestsRequestHandler(RunFileTestsRequest msg) {
+  /// Handler for RunFileTestsRequest.
+  /// Runs all or specified tests of the associated test file.
+  void _runFileTestsRequestHandler(RunFileTestsRequest msg) {
     var response = new FileTestsResult()
         ..responseId = msg.messageId
         ..path = msg.path;
 
-    config.runTests(msg.testIds).then((tests) {
+    _config.runTests(msg.testIds).then((tests) {
       tests.forEach((tc) {
         print('TestResult: $tc');
         if(tc.startTime == null) {
@@ -63,20 +82,24 @@ class IsolateTestrunner {
           ..stackTrace = tc.stackTrace.toString()
           ..startTime = tc.startTime == null ? new DateTime.fromMillisecondsSinceEpoch(0) : tc.startTime);
       });
-      sendPort.send(response.toJson());
+      _sendPort.send(response.toJson());
       //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
 
   }
 
-  void fileTestListRequestHandler(FileTestListRequest msg) {
+  /// Handler fro TestListRequestHandler
+  /// Invokes main and retrieves test methods and groups from the unit test
+  /// configuration.
+  void _fileTestListRequestHandler(TestFileRequest msg) {
     var response = new ConsoleTestFile()
         ..responseId = msg.messageId
         ..path = msg.path;
 
-    config.getTests().then((tests) {
+    _config.getTests().then((tests) {
 
         tests.forEach((tc) {
+          print('Test found: ${tc.description}');
           var names = tc.description.split(ut.groupSep);
           var test = new Test()
               ..name = names.last
@@ -112,7 +135,7 @@ class IsolateTestrunner {
             response.tests.add(test);
           }
         });
-      sendPort.send(response.toJson());
+      _sendPort.send(response.toJson());
       //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
   }

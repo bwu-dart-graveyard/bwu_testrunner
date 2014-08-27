@@ -8,6 +8,9 @@ import 'package:bwu_datagrid/bwu_datagrid.dart';
 import 'package:bwu_datagrid/dataview/dataview.dart';
 import 'package:bwu_datagrid/core/core.dart' as core;
 
+/**
+ * Processes to user input and server messages.
+ */
 class Client {
   BwuDatagrid grid;
 
@@ -15,22 +18,29 @@ class Client {
   final DataView dataView;
 
   int id = 0;
-  Connection _conn = new Connection();
+  Connection _conn = new Connection()
+      ..onReceive.listen((m) => print('Client received: ${m.toJson()}'));
 
   Client(this.grid, this.dataView) {
     _conn.connect(18070)
     .then((_) => _conn.requestTestList())
-    .then((testList) {
-      dataView.beginUpdate();
-      (testList as TestList).consoleTestfiles.forEach((f) {
-        f.tests.forEach((t) => addTest(f.path, null, t));
-        f.groups.forEach((g) => addGroup(f.path, null, g));
-        grid.render();
-      });
+    .then(_setGridData);
+  }
 
-      dataView.setItems(data);
+  /// Initialize the grids data from the [TestList] response.
+  void _setGridData(TestList response) {
+    _conn.testList = response;
+    dataView.beginUpdate();
+    dataView.items.clear();
+    response.consoleTestFiles.forEach((f) {
+      f.tests.forEach((t) => _addTest(f.path, null, t));
+      f.groups.forEach((g) => _addGroup(f.path, null, g));
+      grid.render();
+    });
 
-      dataView.setGrouping(<GroupingInfo>[new GroupingInfo(
+    dataView.setItems(data);
+
+    dataView.setGrouping(<GroupingInfo>[new GroupingInfo(
         getter: "file",
         formatter: new GroupTitleFormatter('File'),
         aggregators: [
@@ -38,10 +48,9 @@ class Client {
 //        new SumAggregator("cost")
         ],
 //      doAggregateCollapsed: false,
-        isLazyTotalsCalculation: true,
-        comparer: testComparer //(core.Group a, core.Group b) => a.groupingKey.compareTo(b.groupingKey)
-      ),
-      new GroupingInfo(
+        isLazyTotalsCalculation: true
+    ),
+    new GroupingInfo(
         getter: "group",
         formatter: new GroupTitleFormatter('Group'),
         aggregators: [
@@ -49,23 +58,24 @@ class Client {
 //        new SumAggregator("cost")
         ],
 //      doAggregateCollapsed: false,
-        isLazyTotalsCalculation: true,
-        comparer: testComparer // (core.Group a, core.Group b) => a.groupingKey.compareTo(b.groupingKey)
-      )
-      ]);
-      dataView.endUpdate();
-      grid.render();
-      //print(testList.toJson());
-    });
+        isLazyTotalsCalculation: true
+    )
+    ]);
+    dataView.endUpdate();
+    grid.render();
+    //print(testList.toJson());
   }
 
-  void addGroup(String file, TestGroup parentGroup, TestGroup group, {int indent: 0}) {
-    group.tests.forEach((t) => addTest(file, group, t, indent: indent + 1));
-    group.groups.forEach((g) => addGroup(file, group, g,  indent: indent + 1));
+  /// Add the tests of a test group to the grid data.
+  void _addGroup(String file, TestGroup parentGroup, TestGroup group, {int indent: 0}) {
+    group.tests.forEach((t) => _addTest(file, group, t, indent: indent + 1));
+    group.groups.forEach((g) => _addGroup(file, group, g,  indent: indent + 1));
   }
 
-  void addTest(String file, TestGroup parentGroup, Test test, {int indent: 0}) {
+  /// Add a test to the grid data.
+  void _addTest(String file, TestGroup parentGroup, Test test, {int indent: 0}) {
     data.add(new MapDataItem({
+      'sel': false,
       'id': id++,
       'type': 'test',
       'file': file,
@@ -74,8 +84,14 @@ class Client {
     }));
   }
 
-  int testComparer(core.Group a, core.Group b) {
-    return (a.value as String).compareTo(b.value);
+
+  ///
+  void runFileTestsHandler(dom.MouseEvent e) {
+    (e.target as dom.Element).classes.add('running');
+    _conn.runAllTestsRequest()
+    .then((responses) {
+      (e.target as dom.Element).classes.remove('running');
+    });
   }
 }
 

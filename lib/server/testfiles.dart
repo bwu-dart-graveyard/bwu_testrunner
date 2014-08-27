@@ -4,7 +4,7 @@ import 'dart:async' as async;
 import 'dart:io' as io;
 import 'package:path/path.dart' as path;
 import 'package:watcher/watcher.dart' as w;
-import 'package:bwu_testrunner/shared/response.dart';
+import 'package:bwu_testrunner/shared/message.dart';
 
 class TestFiles {
 

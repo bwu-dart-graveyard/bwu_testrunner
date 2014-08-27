@@ -12,9 +12,9 @@ void main() {
   }
   print('WD: ${io.Directory.current.absolute.path}');
 
-  server = new TestrunnerServer(new io.Directory('test'), onReady: startClient);
+  server = new TestrunnerServer(new io.Directory('test'), onReady: onReady);
 }
 
-void startClient(int port) {
+void onReady(int port) {
   print('The BWU Testrunner server is listening on "http://localhost:${port}" for connections.');
 }
