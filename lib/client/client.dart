@@ -18,11 +18,43 @@ class Client {
   final DataView dataView;
 
   int id = 0;
-  Connection _conn = new Connection()
-      ..onReceive.listen((m) => print('Client received: ${m.toJson()}'));
+  Connection _conn;
+
+  _messageHandler(Message message) {
+    print('Client received: ${message.toJson()}');
+    if(message is TestRunProgress) {
+      var found = dataView.items.where((e) => e['file'] == message.path && e['testId'] == message.testId);
+      if(found.length == 1) {
+        var item = found.first;
+        var row = dataView.items.indexOf(item);
+        if(message.status != null) item['status'] = message.status;
+        if(message.result != null) item['result'] = message.result;
+        if(message.logMessage != null) item['message'] = message.logMessage;
+        grid.invalidateRow(row);
+        grid.render();
+      }
+    }
+    if(message is FileTestsResult) {
+      message.testResults.forEach((r) {
+        var found = dataView.items.where((e) => e['file'] == message.path && e['testId'] == r.id);
+        if(found.length == 1) {
+          var item = found.first;
+          var row = dataView.items.indexOf(item);
+          item['status'] = r.passed;
+          item['result'] = r.result;
+          item['startTime'] = r.startTime;
+          item['runningTime'] = r.runningTime;
+          grid.invalidateRow(row);
+          grid.render();
+        }
+      });
+    }
+  }
 
   Client(this.grid, this.dataView) {
-    _conn.connect(18070)
+    _conn = new Connection()
+        ..onReceive.listen(_messageHandler)
+        ..connect(18070)
     .then((_) => _conn.requestTestList())
     .then(_setGridData);
   }
@@ -77,6 +109,7 @@ class Client {
     data.add(new MapDataItem({
       'sel': false,
       'id': id++,
+      'testId': test.id,
       'type': 'test',
       'file': file,
       'group': parentGroup == null || parentGroup.name == null ? '' : parentGroup.name,

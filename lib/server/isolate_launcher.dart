@@ -7,90 +7,72 @@ import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
 import 'package:bwu_testrunner/shared/response_completer.dart';
 
-/**
- * Launches isolates for one specified test file.
- */
-class IsolateLauncher {
-
-  // String stores the absolute path of the associated test file
-  static final Map<String,IsolateLauncher> _isolates = <String, IsolateLauncher>{};
-
-  /// Create a new instance or return an existing one.
-  factory IsolateLauncher(io.File file, MessageSink broadcastSink) {
-    var launcher = _isolates[file.absolute.path];
-    if(launcher != null) {
-      return launcher;
-    } else {
-      return new IsolateLauncher._(file, broadcastSink);
-    }
-  }
-
-  /// The test file this isolate was created for.
-  final io.File testFile;
-  final MessageSink _broadcastSink;
-
-  IsolateLauncher._(this.testFile, this._broadcastSink) {
-    _isolates[testFile.absolute.path] = this;
-  }
-
-  String _isolateId;
-  String get isolateId => _isolateId;
-
-  /// Allows to invalidate an isolate for a test file without a concrete
-  /// reference to the [IsolateLauncher] instance.
-  static async.Future<bool> invalidate(io.File file) {
-    var launcher = _isolates.remove(file.absolute.path);
-    if(launcher != null) {
-      return launcher.invalidateIsolate();
-    } else {
-      return new async.Future.value(false);
-    }
-  }
-
-  /// When the test file was updated or removed the isolate needs to be
-  /// stopped and launched again with the new test file.
-  /// This method only stops the isolate. The new instance is created on demand.
-  void invalidateIsolate() {
-    //var msg = new StopIsolateRequest();
-    //var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
-    send(new StopIsolateRequest());
-  }
-
-  /// Handle notifications of received messages.
-  async.StreamController<Message> _onReceive = new async.StreamController<Message>.broadcast();
-  /// Returns a stream to allow external consumers listen to received messages.
-  async.Stream get onReceive => _onReceive.stream;
-
+class _TestCommand {
   /// The port to receive messages of the launched isolate.
   ReceivePort _response = new ReceivePort();
+  final io.File _testFile;
 
   /// The port to send messages to the launched isolate.
   SendPort _sendPort;
 
-  /// Sends a message to the isolate.
-  void send(Message message) {
-    if(!isRunning) {
-      throw 'Isolate for file "${testFile.path}" is not running.';
-    }
-    _sendPort.send(message.toJson());
+  /// Message handler of the caller.
+  MessageSink _responseHandler;
+
+  /// completed when the command execution is finished.
+  async.Completer _commandCompleter;
+
+  // Isolate _isolate;
+
+
+  _TestCommand(this._testFile, this._responseHandler) {
+    _response.listen((message) {
+      if (message is SendPort) {
+        _sendPort = message;
+        print('Isolate for "${_testFile.path} launched');
+        _launchCompleter.complete(this);
+      } else {
+        //var message = new Message.fromJson(e);
+        if (message is StopIsolateRequest) {
+          //invalidateIsolate();
+          _commandCompleter.complete(true);
+        } else {
+          _responseHandler(message);
+        }
+      }
+    });
   }
 
-  /// Returns true when the isolate is running.
-  bool get isRunning => _launchCompleter != null;
-  async.Completer _launchCompleter;
+  async.Future processRequest(Message message) {
+    _commandCompleter = new async.Completer();
+    _launch()
+    .then((isolate) {
+      _sendPort.send(message);
+    });
+    return _commandCompleter.future;
+  }
 
+  /// Sends a message to the isolate.
+//  void send(Message message) {
+//    if(!isRunning) {
+//      throw 'Isolate for file "${testFile.path}" is not running.';
+//    }
+//    _sendPort.send(message);
+//  }
+
+
+  async.Completer _launchCompleter = new async.Completer();
   /// Launches the isolate when it is not yet running.
-  async.Future<IsolateLauncher> _launch() {
-    if(isRunning) {
-      if(!_launchCompleter.isCompleted) {
-        return _launchCompleter.future;
-      }
-      return new async.Future.value(this);
-    }
-    _launchCompleter = new async.Completer();
-    _isolateId = Message.UUID.v4().toString();
+  async.Future _launch() {
+//    if(isRunning) {
+//      if(!_launchCompleter.isCompleted) {
+//        return _launchCompleter.future;
+//      }
+//      return new async.Future.value(this);
+//    }
 
-    print('Launch isolate for "${testFile.path}');
+    //_isolateId = Message.UUID.v4().toString();
+
+    print('Launch isolate for "${_testFile.path}');
 
     io.File main;
     io.Directory tmpDir;
@@ -107,40 +89,38 @@ class IsolateLauncher {
         tmpMainName = '${path.basename(tmpDir.path)}_main.dart';
         main = new io.File(tmpMainName);
         return tmpDir.delete()
-        .then((e) => main.writeAsString(_mainContent(testFile), flush: true));
+        .then((e) => main.writeAsString(_mainContent(_testFile), flush: true));
       });
     })
     .then((_) {
-      print('Test file: ${testFile.path}');
+      print('Test file: ${_testFile.path}');
       var uri = Uri.parse('file://${main.absolute.path}');
       //print('uri: ${uri}');
 
-      return Isolate.spawnUri(uri, [testFile.path], _response.sendPort)
-      .then((i) {
-        _response.listen((e) {
-          if(e is SendPort) {
-            _sendPort = e;
-            print('Isolate for "${testFile.path} launched');
-            _launchCompleter.complete(this);
-          } else {
-            _onReceive.add(new Message.fromJson(e)); // TODO(zoechi) remove
-            _broadcastSink(new Message.fromJson(e));
-          }
-        });
-      })
+      return Isolate.spawnUri(uri, [_testFile.path], _response.sendPort)
+      .then((isolate) {
+        //_isolate = isolate;
+        // TODO(zoechi) not yet supported _isolate.errors.listen((e) => print('Isolate error: $e'));
+        // not supported isolate.addOnExitListener(_sendPort);
+        //_launchCompleter.complete(true);
+      });
+    })
+    .then((_) {
+      return deleteMain(main)
+      .then((_) => this);
+    })
+    .catchError((e, s) {
+      print('$e\n$s');
+      deleteMain(main)
       .then((_) {
-        return deleteMain(main)
-        .then((_) => this);
-      })
-      .catchError((e, s) {
-        print('$e\n$s');
-        deleteMain(main)
-        .then((_) {
-          _launchCompleter = null;
-          _isolateId = null;
+        //_isolateId = null;
+        if(!_launchCompleter.isCompleted) {
           _launchCompleter.completeError(e);
-        });
-
+        }
+        if (_commandCompleter != null && !_commandCompleter.isCompleted) {
+          _commandCompleter.completeError(e);
+        }
+        _commandCompleter = null;
       });
     });
     return _launchCompleter.future;
@@ -159,10 +139,10 @@ class IsolateLauncher {
   }
 
 
-/// The template for the main method used to launch the isolate.
-/// The reference to the test file is added as a library import.
-String _mainContent(io.File testFile) {
-  return '''
+  /// The template for the main method used to launch the isolate.
+  /// The reference to the test file is added as a library import.
+  String _mainContent(io.File testFile) {
+    return '''
 import 'dart:isolate';
 
 import '${testFile.absolute.path}' as tf1__;
@@ -178,4 +158,99 @@ void main(List<String> args, SendPort replyTo) {
 }
 ''';
   }
+}
+
+
+/**
+ * Launches isolates for one specified test file.
+ */
+class IsolateLauncher {
+
+  // String stores the absolute path of the associated test file
+  static final Map<String,IsolateLauncher> _launcher = <String, IsolateLauncher>{};
+
+  //final List<_TestCommand> _runningIsolates = [];
+  //final MessageSink _responseHandler;
+
+  /// Create a new instance or return an existing one.
+  factory IsolateLauncher(io.File file /*, MessageSink broadcastSink*/) {
+    var launcher = _launcher[file.absolute.path];
+    if(launcher != null) {
+      return launcher;
+    } else {
+      return new IsolateLauncher._(file/*, broadcastSink*/);
+    }
+  }
+
+  /// The test file this isolate was created for.
+  final io.File testFile;
+
+  IsolateLauncher._(this.testFile /*, this._responseHandler*/) {
+    _launcher[testFile.absolute.path] = this;
+  }
+
+//  String _isolateId;
+//  String get isolateId => _isolateId;
+
+  /// Allows to invalidate an isolate for a test file without a concrete
+  /// reference to the [IsolateLauncher] instance.
+  static async.Future<bool> invalidate(io.File file) {
+    var launcher = _launcher.remove(file.absolute.path);
+    if(launcher != null) {
+      return launcher.invalidateLauncher();
+    } else {
+      return new async.Future.value(false);
+    }
+  }
+
+  bool _isValid = true;
+
+  void invalidateLauncher() {
+    _isValid = false;
+    //TODO(zoechi) ensure that a file changed message is sent to the client.
+  }
+
+  Message _testFile;
+
+  /// Process requests from a client or the server.
+  async.Future processRequest(Message message) {
+    if(message is TestFileRequest && _testFile != null) {
+      _onReceive.add(_testFile..responseId = message.messageId);
+      return new async.Future.value(true);
+    }
+    var cmd = new _TestCommand(testFile, _processIsolateResponse);
+    return cmd.processRequest(message);
+  }
+
+  /// Process messages received from the isolate.
+  void _processIsolateResponse(Message message) {
+    if(_isValid) {
+      if(message is ConsoleTestFile || message is HtmlTestFile) {
+        _testFile = message;
+      }
+      _onReceive.add(message);
+    }
+  }
+
+//  /// When the test file was updated or removed the isolate needs to be
+//  /// stopped and launched again with the new test file.
+//  /// This method only stops the isolate. The new instance is created on demand.
+//  void invalidateIsolate() {
+//    //var msg = new StopIsolateRequest();
+//    //var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
+//    send(new StopIsolateRequest());
+//    //_isolate.kill();
+//
+//    if(_launchCompleter != null) {
+//      if(!_launchCompleter.isCompleted) {
+//        _launchCompleter.completeError(this);
+//      }
+//      _launchCompleter = null;
+//    }
+//  }
+
+  /// Pass messages from the isolate to the clients.
+  async.StreamController<Message> _onReceive = new async.StreamController<Message>.broadcast();
+  /// Returns a stream to allow external consumers listen to received messages.
+  async.Stream get onReceive => _onReceive.stream;
 }

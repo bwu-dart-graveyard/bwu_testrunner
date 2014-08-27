@@ -23,6 +23,7 @@ class Connection {
 
     _socket = new dom.WebSocket('ws://localhost:${port}')
         ..onMessage.listen((dom.MessageEvent e) {
+          //print('Connection received: ${e.data}');
            _onReceive.add(new Message.fromJson(e.data));
         })
         ..onClose.listen(_onDone)
@@ -72,19 +73,21 @@ class Connection {
   /// in the file.
   async.Future<Message> runAllTestsRequest() {
     var request = new RunFileTestsRequest();
-    var future =  new ResponseCollector(request).future;
-    var requests = <async.Future>[];
-    testList.consoleTestFiles.forEach((ctf) {
-      runFileTestsRequest(ctf.path);
-    });
-    async.Future.wait(requests)
-    .then((responses) {
-       responses.forEach((r) {
-         print('runFileTestsResponse: $r');
-      });
-    });
+    var responseCollector =  new ResponseCollector(request);
+    //var requests = <async.Future>[];
 
-    _socket.send(request.toJson());
-    return future;
+    //responseCollector.subRequests.add(runFileTestsRequest(testList.consoleTestFiles.first.path));
+    testList.consoleTestFiles.forEach((ctf) {
+      responseCollector.subRequests.add(runFileTestsRequest(ctf.path));
+    });
+//    async.Future.wait(requests)
+//    .then((responses) {
+//       responses.forEach((r) {
+//         print('runFileTestsResponse: $r');
+//      });
+//    });
+
+    //_socket.send(request.toJson());
+    return responseCollector.future;
   }
 }

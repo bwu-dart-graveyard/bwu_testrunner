@@ -46,9 +46,10 @@ class AppElement extends PolymerElement {
     new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
 //    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
     new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+    new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
     new Column(id: "result", name: "Result", field: "result", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
     new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
-    new Column(id: "duration", name: "Duration", field: "duration", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
+    new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
     new Column(id: "message", name: "Msg", field: "message", width: 35, sortable: false),
     //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
   ];

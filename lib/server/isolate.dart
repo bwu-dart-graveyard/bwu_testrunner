@@ -1,6 +1,7 @@
 library bwu_testrunner.server.isolate;
 
 import 'dart:io' as io;
+import 'dart:async' as async;
 import 'dart:isolate';
 import 'package:unittest/unittest.dart' as ut;
 import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
@@ -26,42 +27,69 @@ class IsolateTestrunner {
 
   String _filePath;
 
+  final List<async.StreamSubscription> _subscriptions = [];
+
   IsolateTestrunner(this._sendPort, this._main, this._args) {
     _filePath = _args[0];
-    receivePort.listen(_onMessage);
+    _subscriptions.add(receivePort.listen(_onMessage));
     ut.groupSep = "~|~";
     _config = new utc.UnittestConfiguration(_main);
     ut.unittestConfiguration = _config;
     _sendPort.send(receivePort.sendPort);
-    _config
-        ..onTestProgress.listen((m) => _sendPort.send((m..path = _filePath).toJson()))
-        ..onFileTestResult.listen((m) => _sendPort.send((m..path = _filePath).toJson()));
+    _subscriptions.add(_config.onTestProgress.listen((m) => _send((m..path = _filePath))));
+    _subscriptions.add(_config.onFileTestResult.listen((m) => _send((m..path = _filePath))));
   }
 
-  /// Dispatch incoming message processing.
-  void _onMessage(String json) {
-    var msg = new Message.fromJson(json);
+  bool _isUsed = false;
 
-    switch(msg.messageType) {
+  /// Dispatch incoming message processing.
+  void _onMessage(message) {
+    //var msg = new Message.fromJson(json);
+    print('Isolate process message ${message}');
+
+    switch(message.messageType) {
       case StopIsolateRequest.MESSAGE_TYPE:
-        receivePort.close();
-        io.exit(0);
+        _exit();
         break;
 
       case TestFileRequest.MESSAGE_TYPE:
-        _fileTestListRequestHandler(msg);
+        _checkIsUsed();
+        _fileTestListRequestHandler(message);
         break;
 
       case RunFileTestsRequest.MESSAGE_TYPE:
-        _runFileTestsRequestHandler(msg);
+        _checkIsUsed();
+        _runFileTestsRequestHandler(message);
         break;
     }
     //print('child isolate - message "${msg.messageType}" received: $json');
   }
 
+  /// One isolate can only execute one command (UnitTest library limitation)
+  /// Return an error message on a consecutive command.
+  _checkIsUsed() {
+    if(_isUsed) {
+      _send((new ErrorMessage()..errorMessage =
+      'Isolate already used. An isolate can only execute one command.'));
+      return;
+    }
+    _isUsed = true;
+  }
+
+  _exit() {
+    _send(new StopIsolateRequest());
+    _subscriptions.forEach((s) => s.cancel());
+    _config = null;
+    receivePort.close();
+//    new async.Future(() {
+//      throw('Intentionally ending isolate for ${_filePath}');
+//    });
+  }
+
   /// Handler for RunFileTestsRequest.
   /// Runs all or specified tests of the associated test file.
   void _runFileTestsRequestHandler(RunFileTestsRequest msg) {
+    print('Run file tests ${_filePath}');
     var response = new FileTestsResult()
         ..responseId = msg.messageId
         ..path = msg.path;
@@ -82,10 +110,11 @@ class IsolateTestrunner {
           ..stackTrace = tc.stackTrace.toString()
           ..startTime = tc.startTime == null ? new DateTime.fromMillisecondsSinceEpoch(0) : tc.startTime);
       });
-      _sendPort.send(response.toJson());
+      _send(response);
+      //_sendPort.send(new StopIsolateRequest());
+      _exit();
       //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
-
   }
 
   /// Handler fro TestListRequestHandler
@@ -135,9 +164,18 @@ class IsolateTestrunner {
             response.tests.add(test);
           }
         });
-      _sendPort.send(response.toJson());
+      _send(response);
+      //_sendPort.send(new StopIsolateRequest());
+      _exit();
+
+
       //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
+  }
+
+  void _send(Message response) {
+    print('Isolate send: $response');
+    _sendPort.send(response);
   }
 }
 

@@ -92,11 +92,10 @@ class TestrunnerServer {
   /// Create an isolate for each found test file
   void _launchTestIsolates() {
     testFiles.consoleTestfiles.forEach((e) {
-      new IsolateLauncher(e, _isolateBroadcastMessageHandler).launch()
-      .then((IsolateLauncher l) {
-        l.send(new TestFileRequest()
+      (new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/)
+      ..onReceive.listen((m) => _isolateBroadcastMessageHandler(m)))
+      .processRequest(new TestFileRequest()
         ..path = e.path);
-      });
     });
 
     testFiles.htmlTestfiles.forEach((e, f) {
@@ -122,15 +121,15 @@ class TestrunnerServer {
           ..responseId = clientRequest.messageId
           ..errorMessage = 'Testfile "${clientRequest.path}" not found.').toJson());
     } else {
-      var isolateLauncher = new IsolateLauncher(tf.first, _isolateBroadcastMessageHandler);
+      var isolateLauncher = new IsolateLauncher(tf.first /*, _isolateBroadcastMessageHandler*/);
 
       new ResponseForwarder(clientRequest, isolateLauncher.onReceive,
           new SocketMessageSink(socket));
 
-      isolateLauncher.launch()
-      .then((IsolateLauncher l) {
-        l.send(clientRequest);
-      });
+      isolateLauncher.processRequest(clientRequest);
+//      .then((IsolateLauncher l) {
+//        l.send(clientRequest);
+//      });
     }
   }
 
@@ -162,17 +161,17 @@ class TestrunnerServer {
     });
 
     testFiles.consoleTestfiles.forEach((e) {
-      var isolateLauncher = new IsolateLauncher(e, _isolateBroadcastMessageHandler);
+      var isolateLauncher = new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/);
 
       var isolateRequest = new TestFileRequest()
           ..path = e.path;
 
       responseCollector.subRequests.add(new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
 
-      isolateLauncher.launch()
-      .then((IsolateLauncher l) {
-        l.send(isolateRequest);
-      });
+      isolateLauncher.processRequest(isolateRequest);
+//      .then((IsolateLauncher l) {
+//        l.send(isolateRequest);
+//      });
 
     });
 
