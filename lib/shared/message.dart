@@ -7,7 +7,7 @@ abstract class Message {
   static Uuid UUID = new Uuid();
   static const MESSAGE_TYPE = 'Message';
 
-  Message.protected() {
+  Message() {
     messageId = UUID.v4();
   }
 
@@ -56,18 +56,15 @@ abstract class Message {
 
   String get messageType => throw '"messageType" must be overridden in derived classes.';
   String messageId;
-  String responseId;
 
   void fromMap(Map map) {
     messageId = map['messageId'];
-    responseId = map['responseId'];
   }
 
   Map toMap() {
     return {
       'messageType' : messageType,
-      'messageId' : messageId,
-      'responseId' : responseId
+      'messageId' : messageId
     };
   }
 
@@ -79,18 +76,40 @@ abstract class Message {
   String toString() => toJson();
 }
 
+/// A Message that expects an answer.
+abstract class Request extends Message {
+
+}
+
+/// Normally sent as a response to a request.
+abstract class Response extends Message {
+  String responseId;
+
+  void fromMap(Map map) {
+    super.fromMap(map);
+    responseId = map['responseId'];
+  }
+
+  Map toMap() {
+    return super.toMap()
+        ..['responseId'] = responseId;
+    }
+
+}
+
+
 typedef void MessageSink(Message message);
 /// interface for class that can be passed to ResponseCompleter as message receiver.
 //abstract class MessageSink {
 //  void send(Message message);
 //}
 
-class ErrorMessage extends Message {
+class ErrorMessage extends Response {
 
   static const MESSAGE_TYPE = 'ErrorMessage';
   String get messageType => MESSAGE_TYPE;
 
-  ErrorMessage() : super.protected();
+  ErrorMessage() : super();
 
   int errorId = 0;
   String errorMessage;
@@ -114,12 +133,12 @@ class ErrorMessage extends Message {
 }
 
 /// A generic class to send a collection of messages.
-class MessageList<T extends Message> extends Message {
+class MessageList<T extends Message> extends Response {
 
   static const MESSAGE_TYPE = 'MessageList';
   String get messageType => MESSAGE_TYPE;
 
-  MessageList() : super.protected();
+  MessageList() : super();
 
   final List<T> messages = [];
 
@@ -141,12 +160,12 @@ class MessageList<T extends Message> extends Message {
 /**
  * Request a list of all test files including a list of all tests in each file.
  */
-class TestListRequest extends Message {
+class TestListRequest extends Request {
 
   static const MESSAGE_TYPE = 'TestListRequest';
   String get messageType => MESSAGE_TYPE;
 
-  TestListRequest() : super.protected();
+  TestListRequest() : super();
 
   @override
   void fromMap(Map map) {
@@ -164,12 +183,12 @@ class TestListRequest extends Message {
  * The message passes a ConsoleTestFile or HtmlTestFile instance for each
  * found test file.
  */
-class TestList extends Message {
+class TestList extends Response {
 
   static const MESSAGE_TYPE = 'TestList';
   String get messageType => MESSAGE_TYPE;
 
-  TestList() : super.protected();
+  TestList() : super();
 
   final List<ConsoleTestFile> consoleTestFiles = <ConsoleTestFile>[];
   final List<HtmlTestFile> htmlTestFiles = <HtmlTestFile>[];
@@ -193,14 +212,14 @@ class TestList extends Message {
 /**
  * Request a list of tests for a specific file.
  */
-class TestFileRequest extends Message {
+class TestFileRequest extends Request {
 
   static const MESSAGE_TYPE = 'FileTestListRequest';
   String get messageType => MESSAGE_TYPE;
 
   String path;
 
-  TestFileRequest() : super.protected();
+  TestFileRequest() : super();
 
   @override
   void fromMap(Map map) {
@@ -238,7 +257,7 @@ class TestFileRequest extends Message {
 //}
 
 /// The response to a TestFileRequest with details about the tests found in that file.
-class ConsoleTestFile extends Message {
+class ConsoleTestFile extends Response {
 
   static const MESSAGE_TYPE = 'ConsoleTestFile';
   String get messageType => MESSAGE_TYPE;
@@ -247,7 +266,7 @@ class ConsoleTestFile extends Message {
   final List<TestGroup> groups = [];
   final List<Test> tests = [];
 
-  ConsoleTestFile() : super.protected();
+  ConsoleTestFile() : super();
 
   @override
   void fromMap(Map map) {
@@ -267,14 +286,14 @@ class ConsoleTestFile extends Message {
 }
 
 /// The response to a TestFileRequest with details about the tests found in that file.
-class HtmlTestFile extends Message {
+class HtmlTestFile extends Response {
 
   static const MESSAGE_TYPE = 'HtmlTestFile';
   String get messageType => MESSAGE_TYPE;
 
   String path;
 
-  HtmlTestFile() : super.protected();
+  HtmlTestFile() : super();
 
   @override
   void fromMap(Map map) {
@@ -297,7 +316,7 @@ class Test extends Message {
   String name;
   int id;
 
-  Test() : super.protected();
+  Test() : super();
 
   @override
   void fromMap(Map map) {
@@ -325,7 +344,7 @@ class TestGroup extends Message {
   final List<TestGroup> groups = <TestGroup>[];
   final List<Test> tests = <Test>[];
 
-  TestGroup() : super.protected();
+  TestGroup() : super();
 
   @override
   void fromMap(Map map) {
@@ -349,14 +368,14 @@ class TestGroup extends Message {
  * The test file is specified by [path]. If [testIds] contains values
  * only the tests with these ids are executed.
  */
-class RunFileTestsRequest extends Message {
+class RunFileTestsRequest extends Request {
   static const MESSAGE_TYPE = 'RunFileTestsRequest';
   String get messageType => MESSAGE_TYPE;
 
   String path;
   final List<int> testIds = <int>[];
 
-  RunFileTestsRequest() : super.protected();
+  RunFileTestsRequest() : super();
 
   @override
   void fromMap(Map map) {
@@ -375,7 +394,7 @@ class RunFileTestsRequest extends Message {
 
 /// The response to RunFileTestsRequest which passes a list of TestResult
 /// where a TestResult is the result of a single test.
-class FileTestsResult extends Message {
+class FileTestsResult extends Response {
 
   static const MESSAGE_TYPE = 'FileTestsResult';
   String get messageType => MESSAGE_TYPE;
@@ -383,7 +402,7 @@ class FileTestsResult extends Message {
   String path;
   final List<TestResult> testResults = [];
 
-  FileTestsResult() : super.protected();
+  FileTestsResult() : super();
 
   @override
   void fromMap(Map map) {
@@ -416,7 +435,7 @@ class TestResult extends Message {
   String stackTrace;
   DateTime startTime;
 
-  TestResult() : super.protected();
+  TestResult() : super();
 
   @override
   void fromMap(Map map) {
@@ -450,7 +469,7 @@ class StopIsolateRequest extends Message {
   static const MESSAGE_TYPE = 'StopIsolateRequest';
   String get messageType => MESSAGE_TYPE;
 
-  StopIsolateRequest() : super.protected();
+  StopIsolateRequest() : super();
 }
 
 /// Notification about add/remove/edit of a test file.
@@ -462,7 +481,7 @@ class TestFileChanged extends Message {
   String path;
   String changeType;
 
-  TestFileChanged() : super.protected();
+  TestFileChanged() : super();
 
   @override
   void fromMap(Map map) {
@@ -498,7 +517,7 @@ class TestRunProgress extends Message {
   String logMessage;
   bool isSuccess;
 
-  TestRunProgress() : super.protected();
+  TestRunProgress() : super();
 
   @override
   void fromMap(Map map) {

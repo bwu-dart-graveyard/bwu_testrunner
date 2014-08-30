@@ -8,6 +8,7 @@ import 'package:bwu_datagrid/bwu_datagrid.dart';
 import 'package:bwu_datagrid/dataview/dataview.dart';
 import 'package:bwu_datagrid/core/core.dart' as core;
 
+
 /**
  * Processes to user input and server messages.
  */
@@ -29,7 +30,7 @@ class Client {
         var row = dataView.items.indexOf(item);
         if(message.status != null) item['status'] = message.status;
         if(message.result != null) item['result'] = message.result;
-        if(message.logMessage != null) item['message'] = message.logMessage;
+        if(message.logMessage != null) item['message'] += message.logMessage;
         grid.invalidateRow(row);
         grid.render();
       }
@@ -44,6 +45,7 @@ class Client {
           item['result'] = r.result;
           item['startTime'] = r.startTime;
           item['runningTime'] = r.runningTime;
+          item['message'] = item['message'] == null ? r.message : item['message'] + r.message;
           grid.invalidateRow(row);
           grid.render();
         }
@@ -120,10 +122,11 @@ class Client {
 
   ///
   void runFileTestsHandler(dom.MouseEvent e) {
-    (e.target as dom.Element).classes.add('running');
+    var button = e.target as dom.Element;
+    button.classes.add('running');
     _conn.runAllTestsRequest()
     .then((responses) {
-      (e.target as dom.Element).classes.remove('running');
+      button.classes.remove('running');
     });
   }
 }

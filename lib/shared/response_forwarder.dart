@@ -32,12 +32,11 @@ class ResponseForwarder {
   async.StreamSubscription _responseSubscription;
   ResponseCallback _responseCallback;
 
-
   ResponseForwarder(this._request, async.Stream responseStream, this._messageSink, {ResponseCallback responseCallback,  Duration timeout}) {
     if(responseCallback != null) {
       _responseCallback = responseCallback;
     } else {
-      _responseCallback = (Message request, Message response) => response..responseId = request.messageId;
+      _responseCallback = (Request request, Response response) => response..responseId = request.messageId;
     }
     _listeners.add(this);
     _responseSubscription = responseStream.listen(_responseHandler);
@@ -48,7 +47,7 @@ class ResponseForwarder {
     _timeout = new async.Timer(to, _timeoutHandler);
   }
 
-  void _responseHandler(Message response) {
+  void _responseHandler(Response response) {
     if(response.responseId != _request.messageId) {
       return;
     }

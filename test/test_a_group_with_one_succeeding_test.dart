@@ -1,7 +1,7 @@
 library bwu_testrunner.groupe_with_one_succeeding_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
+//import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
 
 void main() {
 //  var _config = new utc.UnittestConfiguration(testMain);

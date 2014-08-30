@@ -166,7 +166,7 @@ class TestrunnerServer {
       var isolateRequest = new TestFileRequest()
           ..path = e.path;
 
-      responseCollector.subRequests.add(new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
+      responseCollector.addSubRequest(isolateRequest.messageId, new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
 
       isolateLauncher.processRequest(isolateRequest);
 //      .then((IsolateLauncher l) {

@@ -37,7 +37,7 @@ class ResponseCompleter {
 
   /// Check if the received message is the response we are waiting for and
   /// complete the [async.Future] if it is.
-  void _responseHandler(Message message) {
+  void _responseHandler(Response message) {
     if(message.responseId != _responseId) {
       return;
     }

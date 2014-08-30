@@ -51,7 +51,7 @@ class Connection {
   /// all the tests they contain.
   async.Future<Message> requestTestList() {
     var request = new TestListRequest();
-    var future =  new ResponseCompleter(request.responseId, onReceive).future;
+    var future =  new ResponseCompleter(request.messageId, onReceive).future;
     _socket.send(request.toJson());
     return future;
   }
@@ -64,7 +64,7 @@ class Connection {
     if(testIds != null) {
       request.testIds.addAll(testIds);
     }
-    var future =  new ResponseCompleter(request.responseId, onReceive).future;
+    var future =  new ResponseCompleter(request.messageId, onReceive).future;
     _socket.send(request.toJson());
     return future;
   }
@@ -78,16 +78,18 @@ class Connection {
 
     //responseCollector.subRequests.add(runFileTestsRequest(testList.consoleTestFiles.first.path));
     testList.consoleTestFiles.forEach((ctf) {
-      responseCollector.subRequests.add(runFileTestsRequest(ctf.path));
+      responseCollector.addSubRequest(ctf.path, runFileTestsRequest(ctf.path));
     });
-//    async.Future.wait(requests)
-//    .then((responses) {
-//       responses.forEach((r) {
-//         print('runFileTestsResponse: $r');
-//      });
-//    });
+    //async.Future.wait(requests)
+    responseCollector.wait();
+    return responseCollector.future
+    .then((MessageList responses) {
+       responses.messages.forEach((r) {
+         print('runFileTestsResponse: $r');
+      });
+    });
 
     //_socket.send(request.toJson());
-    return responseCollector.future;
+    //return responseCollector.future;
   }
 }

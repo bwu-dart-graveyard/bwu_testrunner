@@ -25,30 +25,58 @@ class ResponseCollector {
   final Message request;
 
   /// The list of sub-requests created for [request].
-  final List<async.Future> subRequests = [];
+  final Map<String,async.Future> _subRequests = {};
 
   /// The list of response messages already arrived.
-  final List<Message> results = [];
+  final Map<String,Response> results = {};
 
+  Duration _timeout;
   ResponseCollector(this.request, {Duration timeout}) {
     _listeners.add(this);
-    var to = timeout;
-    if(to == null) {
-      to = new Duration(seconds: 120);
+    _timeout = timeout;
+    if(_timeout == null) {
+      _timeout = new Duration(seconds: 120);
     }
-    completer.future.timeout(to, onTimeout: _timeoutHandler);
+    completer.future.timeout(_timeout, onTimeout: _timeoutHandler);
   }
 
   /// When all [subRequests] have been added start waiting for the responses.
   void wait() {
-    async.Future.wait(subRequests).then((values) {
-      _cleanup();
-      if (!completer.isCompleted) { // due to timeout
-        completer.complete(new MessageList()
-          ..responseId = request.messageId
-          ..messages.addAll(values));
-      }
+    _subRequests.forEach((mId, req) {
+      req.then((response) {
+        results[mId] = response;
+        _checkComplete();
+      })
+      ..timeout(new Duration(seconds: 25), onTimeout: () {
+        //_subRequests.forEach((k, v) {
+          if(!results.containsKey(mId)) {
+            results[mId] = new Timeout()..responseId = mId;
+          }
+        //});
+        _checkComplete();
+      });
     });
+    //async.Future.wait(subRequests).then((values) {
+      //_cleanup();
+//      if (!completer.isCompleted) { // due to timeout
+//        completer.complete(new MessageList()
+//          ..responseId = request.messageId
+//          ..messages.addAll(values));
+//      }
+//    });
+  }
+
+  void _checkComplete() {
+    if (_subRequests.length == results.length) {
+      _cleanup();
+      completer.complete(new MessageList()
+        ..responseId = request.messageId
+        ..messages.addAll(results.values));
+    }
+  }
+
+    void addSubRequest(String messageId, async.Future request) {
+    _subRequests[messageId] = request;
   }
 
   /// Remove this instance from the list of active [ResponseCollector]s.

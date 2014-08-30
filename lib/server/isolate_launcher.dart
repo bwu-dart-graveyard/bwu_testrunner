@@ -5,7 +5,7 @@ import 'dart:io' as io;
 import 'dart:isolate';
 import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
-import 'package:bwu_testrunner/shared/response_completer.dart';
+// import 'package:bwu_testrunner/shared/response_completer.dart';
 
 class _TestCommand {
   /// The port to receive messages of the launched isolate.
@@ -210,7 +210,7 @@ class IsolateLauncher {
     //TODO(zoechi) ensure that a file changed message is sent to the client.
   }
 
-  Message _testFile;
+  Response _testFile;
 
   /// Process requests from a client or the server.
   async.Future processRequest(Message message) {
@@ -240,6 +240,7 @@ class IsolateLauncher {
 //    //var future = new ResponseCompleter(msg.messageId, onReceive, timeout: new Duration(seconds: 3)).future;
 //    send(new StopIsolateRequest());
 //    //_isolate.kill();
+
 //
 //    if(_launchCompleter != null) {
 //      if(!_launchCompleter.isCompleted) {

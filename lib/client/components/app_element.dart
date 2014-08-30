@@ -15,13 +15,13 @@ import 'package:bwu_datagrid/components/bwu_pager/bwu_pager.dart';
 import 'package:bwu_testrunner/client/client.dart';
 import 'package:bwu_datagrid/plugins/checkbox_select_column.dart';
 
-class SumTotalsFormatter extends core.GroupTotalsFormatter  {
+class SumTotalsFormatter extends core.GroupTotalsFormatter {
 
   @override
   void call(dom.HtmlElement target, core.GroupTotals totals, Column columnDef) {
     //target.appendHtml(value);
     double val;
-    if(totals['sum'] != null && totals['sum'][columnDef.field] != null) {
+    if (totals['sum'] != null && totals['sum'][columnDef.field] != null) {
       val = totals['sum'][columnDef.field];
     }
     if (val != null) {
@@ -33,25 +33,25 @@ class SumTotalsFormatter extends core.GroupTotalsFormatter  {
 }
 
 
-
 @CustomTag('app-element')
 class AppElement extends PolymerElement {
 
-  AppElement.created() : super.created() {}
+  AppElement.created() : super.created() {
+  }
 
   CheckboxSelectColumn checkboxColumn = new CheckboxSelectColumn(cssClass: 'bwu-datagrid-cell-checkboxsel');
 
   List<Column> columns = [
-    //new Column(id: "sel", name: "#", field: "sel", cssClass: "cell-selection", width: 40, resizable: false, sortable: true, focusable: false, editor: new ed.CheckboxEditor(), formatter: new fm.CheckmarkFormatter()),
-    new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+      //new Column(id: "sel", name: "#", field: "sel", cssClass: "cell-selection", width: 40, resizable: false, sortable: true, focusable: false, editor: new ed.CheckboxEditor(), formatter: new fm.CheckmarkFormatter()),
+      new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
 //    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-    new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-    new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-    new Column(id: "result", name: "Result", field: "result", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
-    new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
-    new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
-    new Column(id: "message", name: "Msg", field: "message", width: 35, sortable: false),
-    //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
+      new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+      new Column(id: "result", name: "Result", field: "result", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
+      new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
+      new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
+      new Column(id: "message", name: "Msg", field: "message", width: 35, sortable: false),
+      //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
   ];
 
   var gridOptions = new GridOptions(
@@ -75,8 +75,8 @@ class AppElement extends PolymerElement {
 
     var groupItemMetadataProvider = new GroupItemMetadataProvider();
     dataView = new DataView(options: new DataViewOptions(
-      groupItemMetadataProvider: groupItemMetadataProvider,
-      inlineFilters: true
+        groupItemMetadataProvider: groupItemMetadataProvider,
+        inlineFilters: true
     ));
 
     columns.insert(0, checkboxColumn);
@@ -89,8 +89,8 @@ class AppElement extends PolymerElement {
       ($['pager'] as BwuPager).init(dataView, grid);
 
       BwuColumnPicker columnPicker = (new dom.Element.tag('bwu-column-picker') as BwuColumnPicker)
-          ..columns = columns
-          ..grid = grid;
+        ..columns = columns
+        ..grid = grid;
       dom.document.body.append(columnPicker);
 
       grid.onBwuSort.listen((e) {
@@ -136,25 +136,25 @@ class AppElement extends PolymerElement {
   int comparer(DataItem a, DataItem b) {
 
     var x = a[sortCol], y = b[sortCol];
-    if(x == y ) {
+    if (x == y) {
       return 0;
     }
 
-    if(x is Comparable) {
+    if (x is Comparable) {
       return x.compareTo(y);
     }
 
-    if(y is Comparable) {
+    if (y is Comparable) {
       return 1;
     }
 
-    if(x == null && y != null) {
+    if (x == null && y != null) {
       return -1;
     } else if (x != null && y == null) {
       return 1;
     }
 
-    if(x is bool) {
+    if (x is bool) {
       return x == true ? 1 : 0;
     }
     return (x == y ? 0 : (x > y ? 1 : -1));

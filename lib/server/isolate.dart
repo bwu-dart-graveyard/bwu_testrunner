@@ -1,6 +1,5 @@
 library bwu_testrunner.server.isolate;
 
-import 'dart:io' as io;
 import 'dart:async' as async;
 import 'dart:isolate';
 import 'package:unittest/unittest.dart' as ut;
