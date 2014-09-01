@@ -6,6 +6,7 @@
 
 <link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>
 <link rel="import" href="../../../../packages/core_elements/core_icons/iconsets/av_icons.html">
+<link rel="import" href="../../../../packages/core_elements/core_icons/iconsets/av_icons.html">
 <!--<link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
 <link rel="import" href="../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html">
 <link rel="import" href="../../../../packages/core_elements/core_icon.html">-->
@@ -16,14 +17,14 @@
 
     <style>
       * /deep/ * {
-        font-family: arial;
+        font-family: sans-serif,arial;
         font-size: 8pt;
       }
 
       #header {
         border: 1px solid gray;
-        padding: 0px;
-        margin: 0px;
+        padding: 0;
+        margin: 0;
         height: 100px;
       }
 
@@ -54,16 +55,20 @@
         fill: lightgray;
       }
 
-      paper-fab:hover::shadow core-icon svg {
-        fill: white;
-      }
+      /*paper-fab:hover::shadow core-icon svg {*/
+        /*fill: white;*/
+      /*}*/
 
-      paper-fab:hover.running core-icon svg {
+      paper-fab.running::shadow core-icon svg {
         fill: green;
       }
 
-      paper-fab:hover {
-        background-color: blue;
+      paper-fab.running:hover::shadow core-icon svg {
+        fill: red;
+      }
+
+      paper-fab.running {
+        background-color: white;
       }
 
     </style>

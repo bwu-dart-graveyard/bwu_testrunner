@@ -49,47 +49,59 @@ class Connection {
 
   /// Sends a request to the server to return a list of know test files and
   /// all the tests they contain.
-  async.Future<Message> requestTestList() {
+  async.Future<TestList> requestTestList() {
     var request = new TestListRequest();
-    var future =  new ResponseCompleter(request.messageId, onReceive).future;
+    var future =  new ResponseCompleter(request, onReceive).future;
     _socket.send(request.toJson());
     return future;
   }
 
   /// Sends a request to the server to execute all or specific tests of a file
   /// and to return the results of the test runs.
-  async.Future<Message> runFileTestsRequest(String filePath, [List<int> testIds]) {
-    RunFileTestsRequest request = new RunFileTestsRequest()
-        ..path = filePath;
-    if(testIds != null) {
-      request.testIds.addAll(testIds);
-    }
-    var future =  new ResponseCompleter(request.messageId, onReceive).future;
-    _socket.send(request.toJson());
-    return future;
+  async.Future<Response> runFileTestsRequest(String filePath, [List<int> testIds]) {
+    var request = _createRunFileTestsRequest(filePath, testIds);
+    return _sendRunFileTestsRequest(request);
   }
 
   /// Sends one request for each test file to the server to execute all tests
   /// in the file.
-  async.Future<Message> runAllTestsRequest() {
+  async.Future<Response> runAllTestsRequest() {
     var request = new RunFileTestsRequest();
-    var responseCollector =  new ResponseCollector(request);
+    var responseCollector =  new ResponseCollector(request, timeout: new Duration(seconds: 180));
     //var requests = <async.Future>[];
 
     //responseCollector.subRequests.add(runFileTestsRequest(testList.consoleTestFiles.first.path));
     testList.consoleTestFiles.forEach((ctf) {
-      responseCollector.addSubRequest(ctf.path, runFileTestsRequest(ctf.path));
+      var request = _createRunFileTestsRequest(ctf.path);
+      responseCollector.addSubRequest(request, _sendRunFileTestsRequest(request));
     });
     //async.Future.wait(requests)
-    responseCollector.wait();
-    return responseCollector.future
+    return responseCollector.wait()
     .then((MessageList responses) {
-       responses.messages.forEach((r) {
-         print('runFileTestsResponse: $r');
+      responses.messages.forEach((r) {
+         //print('runFileTestsResponse: $r');
+         //_onReceive.add(r);
+        _onReceive.add(r);
       });
+      //_onReceive.add(responses);
     });
 
     //_socket.send(request.toJson());
     //return responseCollector.future;
+  }
+
+  RunFileTestsRequest _createRunFileTestsRequest(String filePath, [List<int> testIds]) {
+    RunFileTestsRequest request = new RunFileTestsRequest()
+      ..path = filePath;
+    if(testIds != null) {
+      request.testIds.addAll(testIds);
+    }
+    return request;
+  }
+
+  async.Future<FileTestsResult> _sendRunFileTestsRequest(RunFileTestsRequest request) {
+    var future =  new ResponseCompleter(request, onReceive).future;
+    _socket.send(request.toJson());
+    return future;
   }
 }

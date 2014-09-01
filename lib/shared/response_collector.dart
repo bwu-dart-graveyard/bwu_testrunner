@@ -3,7 +3,6 @@ library bwu_testrunner.shared.response_collector;
 import 'dart:async' as async;
 import 'package:bwu_testrunner/shared/message.dart';
 
-
 /**
  * Creates a [async.Future] (that can be accessed using the [future] getter)
  * which completes with the response messages after all expected response
@@ -16,19 +15,19 @@ class ResponseCollector {
   /// A static list that references all active [ResponseCollector]s.
   static final List<ResponseCollector> _listeners = [];
 
-  final async.Completer completer = new async.Completer<Message>();
+  final async.Completer<Message> completer = new async.Completer<Message>();
   /// The future that completes when all responses are arrived or when the
   /// timeout has reached.
-  async.Future get future => completer.future;
+  //async.Future get future => completer.future;
 
   /// The original request message.
-  final Message request;
+  final Request request;
 
   /// The list of sub-requests created for [request].
-  final Map<String,async.Future> _subRequests = {};
+  final Map<Request,async.Future<Response>> _subRequests = {};
 
   /// The list of response messages already arrived.
-  final Map<String,Response> results = {};
+  final Map<Request,Response> results = {};
 
   Duration _timeout;
   ResponseCollector(this.request, {Duration timeout}) {
@@ -41,21 +40,22 @@ class ResponseCollector {
   }
 
   /// When all [subRequests] have been added start waiting for the responses.
-  void wait() {
-    _subRequests.forEach((mId, req) {
-      req.then((response) {
-        results[mId] = response;
+  async.Future<Message> wait() {
+    _subRequests.forEach((req, task) {
+      task.then((response) {
+        results[req] = response;
         _checkComplete();
       })
       ..timeout(new Duration(seconds: 25), onTimeout: () {
         //_subRequests.forEach((k, v) {
-          if(!results.containsKey(mId)) {
-            results[mId] = new Timeout()..responseId = mId;
+          if(!results.containsKey(req)) {
+            results[req] = req.timedOutResponse();
           }
         //});
         _checkComplete();
       });
     });
+    return completer.future;
     //async.Future.wait(subRequests).then((values) {
       //_cleanup();
 //      if (!completer.isCompleted) { // due to timeout
@@ -75,8 +75,8 @@ class ResponseCollector {
     }
   }
 
-    void addSubRequest(String messageId, async.Future request) {
-    _subRequests[messageId] = request;
+    void addSubRequest(Request request, async.Future task) {
+    _subRequests[request] = task;
   }
 
   /// Remove this instance from the list of active [ResponseCollector]s.
@@ -87,7 +87,7 @@ class ResponseCollector {
   /// Handle timeout - send Timeout response message.
   void _timeoutHandler() {
     _cleanup();
-    completer.complete(new Timeout());
+    completer.complete(request.timedOutResponse());
   }
 
   /// Stop waiting for and processing of any arriving messages.

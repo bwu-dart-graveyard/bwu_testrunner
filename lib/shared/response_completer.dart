@@ -5,7 +5,7 @@ import 'package:bwu_testrunner/shared/message.dart';
 
 /**
  * Creates a [async.Completer] and when a response to the message arrives
- * completes the [future] completes with the received message.
+ * the [future] completes with the received message.
  * When the response doesn't arrive within the timeout [Duration] the
  * [async.Future] completes with a [Timeout] message.
  */
@@ -23,9 +23,9 @@ class ResponseCompleter {
   async.StreamSubscription _responseSubscription;
 
   /// The id of the request message to wait for responses.
-  final String _responseId;
+  final Request _request;
 
-  ResponseCompleter(this._responseId, async.Stream responseStream, {Duration timeout}) {
+  ResponseCompleter(this._request, async.Stream responseStream, {Duration timeout}) {
     _listeners.add(this);
     _responseSubscription = responseStream.listen(_responseHandler);
     var to = timeout;
@@ -37,12 +37,12 @@ class ResponseCompleter {
 
   /// Check if the received message is the response we are waiting for and
   /// complete the [async.Future] if it is.
-  void _responseHandler(Response message) {
-    if(message.responseId != _responseId) {
+  void _responseHandler(Response response) {
+    if(response.responseId != _request.messageId) {
       return;
     }
     _cleanup();
-    completer.complete(message);
+    completer.complete(response);
   }
 
   void _cleanup() {
@@ -54,7 +54,7 @@ class ResponseCompleter {
 
   void _timeoutHandler() {
     _cleanup();
-    completer.complete(new Timeout()..responseId = _responseId);
+    completer.complete(_request.timedOutResponse());
   }
 
   void cancel() {

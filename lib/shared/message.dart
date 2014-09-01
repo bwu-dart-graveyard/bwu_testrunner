@@ -1,5 +1,6 @@
 library bwu_testrunner.shared.message;
 
+import 'dart:async' as async;
 import 'dart:convert' show JSON;
 import 'package:uuid/uuid.dart' show Uuid;
 
@@ -43,8 +44,10 @@ abstract class Message {
         return new TestRunProgress()..fromMap(map);
       case TestFileChanged.MESSAGE_TYPE:
         return new TestFileChanged()..fromMap(map);
-      case Timeout.MESSAGE_TYPE:
-        return new Timeout()..fromMap(map);
+      case MessageList.MESSAGE_TYPE:
+        return new MessageList()..fromMap(map);
+//      case Timeout.MESSAGE_TYPE:
+//        return new Timeout()..fromMap(map);
       case ErrorMessage.MESSAGE_TYPE:
         return new ErrorMessage()..fromMap(map);
       case StopIsolateRequest.MESSAGE_TYPE:
@@ -74,35 +77,58 @@ abstract class Message {
 
   @override
   String toString() => toJson();
+
+  @override
+  bool operator ==(Request other) {
+    assert(other is Request);
+    return other.messageId == messageId;
+  }
+
+  @override
+  int get hashCode => messageId.hashCode;
 }
 
 /// A Message that expects an answer.
 abstract class Request extends Message {
-
+  Response timedOutResponse();
 }
 
 /// Normally sent as a response to a request.
 abstract class Response extends Message {
   String responseId;
+  bool timedOut = false;
 
   void fromMap(Map map) {
     super.fromMap(map);
     responseId = map['responseId'];
+    timedOut = map['timedOut'];
   }
 
   Map toMap() {
     return super.toMap()
-        ..['responseId'] = responseId;
-    }
-
+        ..['responseId'] = responseId
+        ..['timedOut'] = timedOut;
+  }
 }
 
 
 typedef void MessageSink(Message message);
-/// interface for class that can be passed to ResponseCompleter as message receiver.
-//abstract class MessageSink {
-//  void send(Message message);
-//}
+
+typedef bool MessageFilter(Message message);
+
+class StreamMessageSink extends Function {
+  async.StreamController<Message> _ctrl = new async.StreamController();
+  async.Stream<Message> get onMessage => _ctrl.stream;
+
+  Function _filter;
+  StreamMessageSink([this._filter]);
+
+  call(Message message) {
+    if(_filter == null || _filter(message)) {
+      _ctrl.add(message);
+    }
+  }
+}
 
 class ErrorMessage extends Response {
 
@@ -176,6 +202,12 @@ class TestListRequest extends Request {
   Map toMap() {
     return super.toMap();
   }
+
+  @override
+  TestList timedOutResponse() {
+    return new TestList()
+        ..timedOut = true;
+  }
 }
 
 /**
@@ -195,6 +227,7 @@ class TestList extends Response {
 
   @override
   void fromMap(Map map) {
+    super.fromMap(map);
     consoleTestFiles.addAll(
         map['consoleTestfiles'].map((e) => new Message.createFromMap(e)));
     htmlTestFiles.addAll(
@@ -231,6 +264,13 @@ class TestFileRequest extends Request {
   Map toMap() {
     return super.toMap()..['path'] = path;
   }
+
+  @override
+  TestFile timedOutResponse() {
+    return new TestFile()
+        ..responseId = messageId
+        ..timedOut = true;
+  }
 }
 
 
@@ -256,8 +296,14 @@ class TestFileRequest extends Request {
 //  }
 //}
 
+// A common base class for console and HTML test files.
+// A concrete instance of this type must only be used for a TimeOut response.
+class TestFile extends Response {
+  static const MESSAGE_TYPE = 'TestFile';
+}
+
 /// The response to a TestFileRequest with details about the tests found in that file.
-class ConsoleTestFile extends Response {
+class ConsoleTestFile extends TestFile {
 
   static const MESSAGE_TYPE = 'ConsoleTestFile';
   String get messageType => MESSAGE_TYPE;
@@ -286,7 +332,7 @@ class ConsoleTestFile extends Response {
 }
 
 /// The response to a TestFileRequest with details about the tests found in that file.
-class HtmlTestFile extends Response {
+class HtmlTestFile extends TestFile {
 
   static const MESSAGE_TYPE = 'HtmlTestFile';
   String get messageType => MESSAGE_TYPE;
@@ -389,6 +435,14 @@ class RunFileTestsRequest extends Request {
     return super.toMap()
       ..['path'] = path
       ..['testIds'] = testIds.toList();
+  }
+
+  @override
+  FileTestsResult timedOutResponse() {
+    return new FileTestsResult()
+        ..responseId = messageId
+        ..timedOut = true
+        ..path = path;
   }
 }
 
@@ -499,7 +553,7 @@ class TestFileChanged extends Message {
 }
 
 /// Notification about the progress of the test execution.
-class TestRunProgress extends Message {
+class TestRunProgress extends Response {
   static const NONE = 0;
   static const STARTED = 1;
   static const RESULT_UPDATE = 2;
@@ -541,13 +595,13 @@ class TestRunProgress extends Message {
 }
 
 /// Notification about an error.
-class Timeout extends ErrorMessage {
-
-  static const MESSAGE_TYPE = 'Timeout';
-  String get messageType => MESSAGE_TYPE;
-
-  Timeout() : super() {
-    errorId = 1;
-    errorMessage = 'The response to the request didn\'t arrive in time.';
-  }
-}
+//class Timeout extends ErrorMessage {
+//
+//  static const MESSAGE_TYPE = 'Timeout';
+//  String get messageType => MESSAGE_TYPE;
+//
+//  Timeout() : super() {
+//    errorId = 1;
+//    errorMessage = 'The response to the request didn\'t arrive in time.';
+//  }
+//}

@@ -12,8 +12,9 @@ import 'package:bwu_datagrid/core/core.dart' as core;
 import 'package:bwu_datagrid/plugins/row_selection_model.dart';
 import 'package:bwu_datagrid/components/bwu_column_picker/bwu_column_picker.dart';
 import 'package:bwu_datagrid/components/bwu_pager/bwu_pager.dart';
-import 'package:bwu_testrunner/client/client.dart';
 import 'package:bwu_datagrid/plugins/checkbox_select_column.dart';
+import 'package:bwu_datagrid/formatters/formatters.dart' as fm;
+import 'package:bwu_testrunner/client/client.dart';
 
 class SumTotalsFormatter extends core.GroupTotalsFormatter {
 
@@ -46,10 +47,11 @@ class AppElement extends PolymerElement {
       new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
 //    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
       new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true, formatter: new StatusFormatter()),
       new Column(id: "result", name: "Result", field: "result", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
       new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
       new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
+      new Column(id: "startTime", name: "Start", field: "startTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
       new Column(id: "message", name: "Msg", field: "message", width: 35, sortable: false),
       //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
   ];
@@ -158,5 +160,18 @@ class AppElement extends PolymerElement {
       return x == true ? 1 : 0;
     }
     return (x == y ? 0 : (x > y ? 1 : -1));
+  }
+}
+
+
+class StatusFormatter extends fm.Formatter {
+  void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
+    var result;
+    if(value == null) {
+      result = '';
+    } else {
+      result = value.toString();
+    }
+    target.appendHtml(result);
   }
 }

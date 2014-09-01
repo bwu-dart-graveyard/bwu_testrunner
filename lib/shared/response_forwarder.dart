@@ -15,7 +15,7 @@ class SocketMessageSink  {
   }
 }
 
-typedef Message ResponseCallback(Message request, Message response);
+typedef Message ResponseCallback(Request request, Response response);
 
 /**
  * Waits for a response and forwards it to a MessageSink.
@@ -25,7 +25,7 @@ class ResponseForwarder {
 
   static final List<ResponseForwarder> _listeners = [];
 
-  final Message _request;
+  final Request _request;
   final MessageSink _messageSink;
   async.Timer _timeout;
 
@@ -71,7 +71,7 @@ class ResponseForwarder {
   void _timeoutHandler() {
     _cleanup();
 
-    _messageSink(_responseCallback(_request, new Timeout()));
+    _messageSink(_responseCallback(_request, _request.timedOutResponse()));
   }
 
   void cancel() {

@@ -35,9 +35,11 @@ class TestrunnerServer {
       }
     });
 
+    testFiles.onTestFilesChanged.listen(testFilesChangedHandler);
     _launchTestIsolates();
   }
 
+  /// Init the server
   void _serve(io.HttpServer server) {
     ht.VirtualDirectory vd = new ht.VirtualDirectory('packages/bwu_testrunner/client/content/web');
     server.listen((request) {
@@ -63,7 +65,7 @@ class TestrunnerServer {
   void _handleWebsocket(io.WebSocket socket) {
     print('Client connected');
     _connectedClients.add(socket);
-    testFiles.onTestfilesChanged.listen(testFilesChangedHandler);
+
     socket.listen((String s) {
       var c = new Message.fromJson(s);
       print('Client sent: $s');
@@ -82,29 +84,61 @@ class TestrunnerServer {
       _connectedClients.remove(socket);
       print('Client disconnected');
     });
+
+    if(_testFilesListResponseCache != null) {
+      print('connection send: ${_testFilesListResponseCache}');
+      socket.add(_testFilesListResponseCache.toJson());
+    }
+
+    _runFileTestsResponseCache.forEach((k, v) {
+        print('connection send: ${v}');
+        socket.add(v.toJson());
+    });
   }
 
-  void _isolateBroadcastMessageHandler(Message message) {
-    print('broadcast: ${message.toJson()}');
-    _connectedClients.forEach((c) => c.add(message.toJson()));
+  /// Process messages received from isolates.
+  void _isolateMessageHandler(Message message) {
+    if(message is StopIsolateRequest || (message is Response && message.responseId != null)) {
+      ///print('ignore: ${message.toJson()}');
+    } else {
+      print('broadcast: ${message.toJson()}');
+
+      _connectedClients.forEach((c) {
+        c.add(message.toJson());
+      });
+    }
   }
+
+  TestList _testFilesListResponseCache;
 
   /// Create an isolate for each found test file
+  /// This method is invoked on server startup to have response data ready when
+  /// the first clients connect.
   void _launchTestIsolates() {
-    testFiles.consoleTestfiles.forEach((e) {
-      (new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/)
-      ..onReceive.listen((m) => _isolateBroadcastMessageHandler(m)))
-      .processRequest(new TestFileRequest()
-        ..path = e.path);
+    var testListRequest = new TestListRequest();
+    var responseCollector = new ResponseCollector(testListRequest);
+    testFiles.consoleTestFiles.forEach((e) {
+      var testFileRequest = new TestFileRequest()
+        ..path = e.path;
+      var isolateLauncher = (new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/));
+      //..onReceive.listen((m) => _isolateBroadcastMessageHandler(m)))
+      var messageSink = new StreamMessageSink();
+      isolateLauncher.processRequest(testFileRequest, messageSink: messageSink);
+      responseCollector.addSubRequest(testFileRequest, messageSink.onMessage.first);
+    });
+    responseCollector.wait().then((MessageList message) {
+      _testFilesListResponseCache = new TestList();
+      message.messages.forEach((m) => _testFilesListResponseCache.consoleTestFiles.add(m));
     });
 
-    testFiles.htmlTestfiles.forEach((e, f) {
+    testFiles.htmlTestFiles.forEach((e, f) {
       // TODO(zoech) handle HTML tests
       // can't be run in isolates, needs content_shell
       // response.htmlTestFiles.add(new HtmlTestFile()..path = e.path);
     });
   }
 
+  Map<String,FileTestsResult> _runFileTestsResponseCache = {};
   /***
    * Process RunFileTestsRequest.
    * A RunFileTestRequest runs all or the specified tests of one test file.
@@ -113,20 +147,34 @@ class TestrunnerServer {
    */
   void _runFileTestsRequestHandler(io.WebSocket socket,
                                   RunFileTestsRequest clientRequest) {
-
-    var tf = testFiles.consoleTestfiles.where(
+    var tf = testFiles.consoleTestFiles.where(
                 (ctf) => ctf.path == clientRequest.path);
     if(tf.length == 0) {
+      // TODO(zoechi) add errors to regular responses
       socket.add((new ErrorMessage()
           ..responseId = clientRequest.messageId
           ..errorMessage = 'Testfile "${clientRequest.path}" not found.').toJson());
     } else {
       var isolateLauncher = new IsolateLauncher(tf.first /*, _isolateBroadcastMessageHandler*/);
 
-      new ResponseForwarder(clientRequest, isolateLauncher.onReceive,
-          new SocketMessageSink(socket));
+      var messageSink = new StreamMessageSink((message) {
+        if(message is FileTestsResult) {
+          return true;
+        } else {
+          // broadcast
+          _isolateMessageHandler(message);
+          return false;
+        }
+      });
 
-      isolateLauncher.processRequest(clientRequest);
+      new ResponseForwarder(clientRequest, messageSink.onMessage,
+        (FileTestsResult message) {
+          socket.add(message.toJson());
+          //message.r
+          _runFileTestsResponseCache[clientRequest.path] = message;
+        });
+
+      isolateLauncher.processRequest(clientRequest, messageSink: messageSink);
 //      .then((IsolateLauncher l) {
 //        l.send(clientRequest);
 //      });
@@ -138,13 +186,13 @@ class TestrunnerServer {
 
     var responseCollector = new ResponseCollector(clientRequest);
 
-    new ResponseForwarder(clientRequest, responseCollector.future.asStream(),
+    new ResponseForwarder(clientRequest, responseCollector.wait().asStream(),
         new SocketMessageSink(socket), responseCallback:
-          (Message request, Message response) {
+          (Request request, MessageList response) {
       TestList clientResponse = new TestList()
           ..responseId = request.messageId;
 
-      if(response is MessageList) {
+      if(response is MessageList && response.timedOut == false) {
         response.messages.forEach((Message m) {
           if(m is ConsoleTestFile) {
             clientResponse.consoleTestFiles.add(m);
@@ -155,18 +203,18 @@ class TestrunnerServer {
           }
         });
         return clientResponse;
-      } else if (response is Timeout) {
+      } else {
         return response..responseId = request.messageId;
       }
     });
 
-    testFiles.consoleTestfiles.forEach((e) {
+    testFiles.consoleTestFiles.forEach((e) {
       var isolateLauncher = new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/);
 
       var isolateRequest = new TestFileRequest()
           ..path = e.path;
 
-      responseCollector.addSubRequest(isolateRequest.messageId, new ResponseCompleter(isolateRequest.messageId, isolateLauncher.onReceive).future);
+      responseCollector.addSubRequest(isolateRequest, new ResponseCompleter(isolateRequest, isolateLauncher.onReceive).future);
 
       isolateLauncher.processRequest(isolateRequest);
 //      .then((IsolateLauncher l) {
@@ -175,16 +223,18 @@ class TestrunnerServer {
 
     });
 
-    testFiles.htmlTestfiles.forEach((e, f) {
+    testFiles.htmlTestFiles.forEach((e, f) {
       // TODO(zoech) handle HTML tests
       // can't be run in isolates, needs content_shell
-      // response.htmlTestfiles.add(new HtmlTestfile()..path = e.path);
+      // response.htmlTestFiles.add(new HtmlTestFile()..path = e.path);
     });
 
     responseCollector.wait();
   }
 
   void testFilesChangedHandler(TestFileChanged event) {
+    _testFilesListResponseCache = null;
+    _runFileTestsResponseCache.clear();
     _connectedClients.forEach((l) => l.add(event.toJson()));
   }
 

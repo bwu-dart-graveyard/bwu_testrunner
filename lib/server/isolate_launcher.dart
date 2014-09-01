@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:bwu_testrunner/shared/message.dart';
 // import 'package:bwu_testrunner/shared/response_completer.dart';
 
+/// Launches a new isolate instance to process a command.
 class _TestCommand {
   /// The port to receive messages of the launched isolate.
   ReceivePort _response = new ReceivePort();
@@ -21,10 +22,8 @@ class _TestCommand {
   /// completed when the command execution is finished.
   async.Completer _commandCompleter;
 
-  // Isolate _isolate;
-
-
   _TestCommand(this._testFile, this._responseHandler) {
+    var messageList = new MessageList();
     _response.listen((message) {
       if (message is SendPort) {
         _sendPort = message;
@@ -36,12 +35,16 @@ class _TestCommand {
           //invalidateIsolate();
           _commandCompleter.complete(true);
         } else {
+          messageList.messages.add(message);
           _responseHandler(message);
         }
       }
     });
   }
 
+  /// Launch a new isolate, send the request to message to the isolate and
+  /// complete the _commandCompleter when the StopRequestRequest message was
+  /// sent by the isolate.
   async.Future processRequest(Message message) {
     _commandCompleter = new async.Completer();
     _launch()
@@ -51,27 +54,11 @@ class _TestCommand {
     return _commandCompleter.future;
   }
 
-  /// Sends a message to the isolate.
-//  void send(Message message) {
-//    if(!isRunning) {
-//      throw 'Isolate for file "${testFile.path}" is not running.';
-//    }
-//    _sendPort.send(message);
-//  }
-
-
+  /// [_launchCompleter] completes when the isolate is ready to receive messages.
   async.Completer _launchCompleter = new async.Completer();
+
   /// Launches the isolate when it is not yet running.
   async.Future _launch() {
-//    if(isRunning) {
-//      if(!_launchCompleter.isCompleted) {
-//        return _launchCompleter.future;
-//      }
-//      return new async.Future.value(this);
-//    }
-
-    //_isolateId = Message.UUID.v4().toString();
-
     print('Launch isolate for "${_testFile.path}');
 
     io.File main;
@@ -162,7 +149,7 @@ void main(List<String> args, SendPort replyTo) {
 
 
 /**
- * Launches isolates for one specified test file.
+ * Launches an isolate to process a command for a specific test file.
  */
 class IsolateLauncher {
 
@@ -212,18 +199,31 @@ class IsolateLauncher {
 
   Response _testFile;
 
-  /// Process requests from a client or the server.
-  async.Future processRequest(Message message) {
+  /// Process requests sent to the isolate.
+  async.Future<MessageList> processRequest(Message message, {MessageSink messageSink}) {
     if(message is TestFileRequest && _testFile != null) {
       _onReceive.add(_testFile..responseId = message.messageId);
       return new async.Future.value(true);
     }
-    var cmd = new _TestCommand(testFile, _processIsolateResponse);
+
+    var messageHandler = messageSink;
+    if(messageHandler == null) {
+      messageHandler = _processIsolateResponse;
+    } else {
+      messageHandler = (Message message) {
+        // ignore messages from an invalid test file isolate
+        if(_isValid) {
+          messageSink(message);
+        }
+      };
+    }
+    var cmd = new _TestCommand(testFile, messageHandler);
     return cmd.processRequest(message);
   }
 
   /// Process messages received from the isolate.
   void _processIsolateResponse(Message message) {
+    // ignore messages from an invalid test file isolate
     if(_isValid) {
       if(message is ConsoleTestFile || message is HtmlTestFile) {
         _testFile = message;

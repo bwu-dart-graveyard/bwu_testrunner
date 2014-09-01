@@ -13,11 +13,11 @@ class TestFiles {
 
   final io.Directory testDirectory;
 
-  final consoleTestfiles = <io.File>[];
-  final htmlTestfiles = <io.File, io.File>{};
+  final consoleTestFiles = <io.File>[];
+  final htmlTestFiles = <io.File, io.File>{};
 
-  final async.StreamController _onTestfilesChanged = new async.StreamController.broadcast();
-  async.Stream get onTestfilesChanged => _onTestfilesChanged.stream;
+  final async.StreamController _onTestFilesChanged = new async.StreamController.broadcast();
+  async.Stream get onTestFilesChanged => _onTestFilesChanged.stream;
 
   final directoryWatches = <async.StreamSubscription>[];
 
@@ -37,7 +37,7 @@ class TestFiles {
       return;
     }
     // TODO(zoechi) send notifications so interested parties know what has changed
-    // stop isolate when testfile has changed
+    // stop isolate when the test file was modified
     // add remove test files
     print('testfiles changed');
     // TODO findTestFiles();
@@ -50,7 +50,7 @@ class TestFiles {
       return;
     }
 
-    _onTestfilesChanged.add(new TestFileChanged()
+    _onTestFilesChanged.add(new TestFileChanged()
         ..path = e.path
         ..changeType = e.type.toString());
 
@@ -65,10 +65,10 @@ class TestFiles {
   }
 
   void findTestFiles() {
-    consoleTestfiles.clear();
-    htmlTestfiles.clear();
+    consoleTestFiles.clear();
+    htmlTestFiles.clear();
 
-    Map htmlTestfilesPath = {};
+    Map htmlTestFilesPath = {};
 
     var files = testDirectory.listSync(recursive: true, followLinks: false);
     files.where((f) => f is io.File && path.extension(f.path) == '.html').forEach((f) {
@@ -82,18 +82,18 @@ class TestFiles {
         if(mainWithUnitTest.firstMatch(scriptFile.readAsStringSync()) != null) {
           //print('"${scriptFile.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
           //print('Add "${scriptFile.path}" to HTML tests (associated with "${f.path}".');
-          htmlTestfiles[scriptFile]=f;
-          htmlTestfilesPath[scriptFile.absolute.path] = 1;
+          htmlTestFiles[scriptFile]=f;
+          htmlTestFilesPath[scriptFile.absolute.path] = 1;
           print('Html: ${f.path}');
         }
       }
     });
-    files.where((f) => f is io.File && path.extension(f.path) == '.dart' && !htmlTestfilesPath.containsKey(f.absolute.path))
+    files.where((f) => f is io.File && path.extension(f.path) == '.dart' && !htmlTestFilesPath.containsKey(f.absolute.path))
     .forEach((f) {
       if(mainWithUnitTest.firstMatch(f.readAsStringSync()) != null) {
         //print('"${f.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
         //print('Add "${f.path}" to console tests.');
-        consoleTestfiles.add(f);
+        consoleTestFiles.add(f);
         print('Console: ${f.path}');
       }
     });

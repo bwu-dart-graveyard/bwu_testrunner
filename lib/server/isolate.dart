@@ -79,7 +79,9 @@ class IsolateTestrunner {
     _send(new StopIsolateRequest());
     _subscriptions.forEach((s) => s.cancel());
     _config = null;
-    receivePort.close();
+    new async.Future(() {
+      receivePort.close();
+    });
 //    new async.Future(() {
 //      throw('Intentionally ending isolate for ${_filePath}');
 //    });
@@ -110,9 +112,7 @@ class IsolateTestrunner {
           ..startTime = tc.startTime == null ? new DateTime.fromMillisecondsSinceEpoch(0) : tc.startTime);
       });
       _send(response);
-      //_sendPort.send(new StopIsolateRequest());
       _exit();
-      //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
   }
 
@@ -164,11 +164,7 @@ class IsolateTestrunner {
           }
         });
       _send(response);
-      //_sendPort.send(new StopIsolateRequest());
       _exit();
-
-
-      //print('child isolate - message "${msg.messageType}" sent: ${response.toJson()}');
     });
   }
 
