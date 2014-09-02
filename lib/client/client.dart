@@ -1,5 +1,6 @@
 library bwu_testrunner.client.client;
 
+import 'dart:async' as async;
 import 'dart:html' as dom;
 import 'package:bwu_datagrid/datagrid/helpers.dart';
 import 'connection.dart';
@@ -37,6 +38,7 @@ class Client {
       if(found.length == 1) {
         var item = found.first;
         var row = dataView.items.indexOf(item);
+        print('status: ${message.status}');
         if(message.status != null) item['status'] = message.status;
         if(message.result != null) item['result'] = message.result;
         if(message.logMessage != null) item['message'] += message.logMessage;
@@ -49,6 +51,7 @@ class Client {
         if(found.length == 1) {
           var item = found.first;
           var row = dataView.items.indexOf(item);
+          print('status: ${r.passed}');
           item['status'] = r.passed;
           item['result'] = r.result;
           item['startTime'] = r.startTime;
@@ -64,9 +67,11 @@ class Client {
         found.forEach((item) {
           if(message.testResults.where((tr) => tr.id == item['testId']).length == 0) {
             var row = dataView.items.indexOf(item);
-            item['status'] = 'timed out';
-            item['result'] = 'failed';
-            item['message'] = 'Timed out';
+            if(item['result'] == '') {
+              item['status'] = 'timeout';
+              item['result'] = 'timeout';
+              item['message'] = 'timeout';
+            }
             grid.invalidateRow(row);
             grid.render();
           }
@@ -123,7 +128,13 @@ class Client {
     ]);
     dataView.endUpdate();
     grid.render();
-    //print(testList.toJson());
+
+    new async.Timer.periodic(new Duration(minutes: 1), (_) {
+      if(dataView != null) {
+        grid.invalidateAllRows();
+        grid.render();
+      }
+    });
   }
 
   /// Add the tests of a test group to the grid data.
@@ -154,6 +165,7 @@ class Client {
       item['result'] = '';
       item['status'] = '';
       item['runningTime'] = '';
+      item['startTime'] = '';
       item['message'] = '';
     });
     grid.invalidateAllRows();

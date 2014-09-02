@@ -148,7 +148,7 @@ class UnittestConfiguration extends ut.Configuration {
         _onTestRunProgress.add(new TestRunProgress()
           ..testId = testCase.id
           ..logMessage = message
-          ..status = TestRunProgress.RESULT_UPDATE);
+          ..status = TestRunProgress.LOG_MESSAGE);
         break;
     }
   }
@@ -172,7 +172,7 @@ class UnittestConfiguration extends ut.Configuration {
     switch (_command) {
       case _RUN_TESTS_COMMAND:
         _onTestRunProgress.add(new TestRunProgress()
-          ..status = TestRunProgress.RESULT_UPDATE);
+          ..status = TestRunProgress.DONE);
         break;
     }
   }

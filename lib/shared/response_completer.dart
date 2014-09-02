@@ -30,7 +30,7 @@ class ResponseCompleter {
     _responseSubscription = responseStream.listen(_responseHandler);
     var to = timeout;
     if(to == null) {
-      to = new Duration(seconds: 120);
+      to = new Duration(seconds: 480);
     }
     completer.future.timeout(to, onTimeout: _timeoutHandler);
   }

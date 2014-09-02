@@ -3,10 +3,12 @@
 <link rel="import" href="../../../../packages/bwu_datagrid/bwu_datagrid.html">
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_pager/bwu_pager.html'>
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_column_picker/bwu_column_picker.html'>
+<link rel='import' href='../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html'>
 
 <link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>
-<link rel="import" href="../../../../packages/core_elements/core_icons/iconsets/av_icons.html">
-<link rel="import" href="../../../../packages/core_elements/core_icons/iconsets/av_icons.html">
+<link rel="import" href="../../../../packages/core_elements/av_icons.html">
+<link rel="import" href="../../../../packages/core_elements/core_iconset.html">
+<link rel="import" href="../../../../packages/core_elements/core_icon.html">
 <!--<link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
 <link rel="import" href="../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html">
 <link rel="import" href="../../../../packages/core_elements/core_icon.html">-->
@@ -71,7 +73,32 @@
         background-color: white;
       }
 
+      bwu-datagrid /deep/ core-icon.test-result {
+        width: 18px;
+        height: 18px;
+      }
+
+      bwu-datagrid /deep/ core-icon.result-error,
+      bwu-datagrid /deep/ core-icon.result-fail,
+      bwu-datagrid /deep/ core-icon.result-timeout {
+        fill: red;
+      }
+
+      bwu-datagrid /deep/ core-icon.result-pass {
+        fill: green;
+      }
+
+      bwu-datagrid /deep/ core-icon.prev-result-error,
+      bwu-datagrid /deep/ core-icon.prev-result-fail,
+      bwu-datagrid /deep/ core-icon.prev-result-timeout {
+        fill: #fcc;
+      }
+
+      bwu-datagrid /deep/ core-icon.prev-result-pass {
+        fill: #aca;
+      }
     </style>
+    <bwu-fontawesome-iconset-svg></bwu-fontawesome-iconset-svg>
     <div id="header">
       <!--<bwu-fontawesome-iconset-svg iconSize="80"></bwu-fontawesome-iconset-svg>
 
@@ -79,7 +106,8 @@
       <core-icon id="run" icon="av:play-arrow" style="width=80px; height=80px;"></core-icon>
       <paper-icon-button icon="av:play-arrow"></paper-icon-button>
       <core-icon id="run2" icon="fa:glass" iconSize="150" style="width=80px; height=80px;"></core-icon> -->
-      <paper-fab icon="av:play-arrow" on-mouseover="{{wsClient.runFileTestsHandler}}"></paper-fab>
+      <paper-fab icon="fa:forward" on-mouseover="{{wsClient.runFileTestsHandler}}"></paper-fab>
+      <!-- av:play-arrow -->
       <ul>
         <li>all tests</li>
         <li>all failed tests</li>

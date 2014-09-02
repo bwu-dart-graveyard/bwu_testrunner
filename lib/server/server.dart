@@ -3,7 +3,7 @@ library bwu_testrunner.server;
 import 'dart:io' as io;
 import 'testfiles.dart';
 import 'package:http_server/http_server.dart' as ht;
-import 'package:bwu_testrunner/server/isolate_launcher.dart';
+import 'package:bwu_testrunner/server/test_launcher.dart';
 import 'package:bwu_testrunner/shared/message.dart';
 import 'package:bwu_testrunner/shared/response_forwarder.dart';
 import 'package:bwu_testrunner/shared/response_collector.dart';
@@ -19,7 +19,7 @@ class TestrunnerServer {
   TestFiles testFiles;
 
   /// The port the server listens to websocket connect requests.
-  final servePort = 18070;
+  static int servePort = 18070;
 
   /// The directory containing the test files.
   io.Directory testDirectory;
@@ -36,7 +36,7 @@ class TestrunnerServer {
     });
 
     testFiles.onTestFilesChanged.listen(testFilesChangedHandler);
-    _launchTestIsolates();
+    _initTestFilesListResponseCache();
   }
 
   /// Init the server
@@ -114,16 +114,15 @@ class TestrunnerServer {
   /// Create an isolate for each found test file
   /// This method is invoked on server startup to have response data ready when
   /// the first clients connect.
-  void _launchTestIsolates() {
+  void _initTestFilesListResponseCache() {
     var testListRequest = new TestListRequest();
     var responseCollector = new ResponseCollector(testListRequest);
     testFiles.consoleTestFiles.forEach((e) {
       var testFileRequest = new TestFileRequest()
         ..path = e.path;
-      var isolateLauncher = (new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/));
-      //..onReceive.listen((m) => _isolateBroadcastMessageHandler(m)))
+      var commandLauncher = (new CommandLauncher(e, CommandLauncher.ISOLATE_COMMAND));
       var messageSink = new StreamMessageSink();
-      isolateLauncher.processRequest(testFileRequest, messageSink: messageSink);
+      commandLauncher.processRequest(testFileRequest, messageSink: messageSink);
       responseCollector.addSubRequest(testFileRequest, messageSink.onMessage.first);
     });
     responseCollector.wait().then((MessageList message) {
@@ -155,7 +154,7 @@ class TestrunnerServer {
           ..responseId = clientRequest.messageId
           ..errorMessage = 'Testfile "${clientRequest.path}" not found.').toJson());
     } else {
-      var isolateLauncher = new IsolateLauncher(tf.first /*, _isolateBroadcastMessageHandler*/);
+      var commandLauncher = new CommandLauncher(tf.first, CommandLauncher.PROCESS_COMMAND);
 
       var messageSink = new StreamMessageSink((message) {
         if(message is FileTestsResult) {
@@ -174,10 +173,7 @@ class TestrunnerServer {
           _runFileTestsResponseCache[clientRequest.path] = message;
         });
 
-      isolateLauncher.processRequest(clientRequest, messageSink: messageSink);
-//      .then((IsolateLauncher l) {
-//        l.send(clientRequest);
-//      });
+      commandLauncher.processRequest(clientRequest, messageSink: messageSink);
     }
   }
 
@@ -209,14 +205,14 @@ class TestrunnerServer {
     });
 
     testFiles.consoleTestFiles.forEach((e) {
-      var isolateLauncher = new IsolateLauncher(e /*, _isolateBroadcastMessageHandler*/);
+      var commandLauncher = new CommandLauncher(e, CommandLauncher.ISOLATE_COMMAND);
 
       var isolateRequest = new TestFileRequest()
           ..path = e.path;
 
-      responseCollector.addSubRequest(isolateRequest, new ResponseCompleter(isolateRequest, isolateLauncher.onReceive).future);
+      responseCollector.addSubRequest(isolateRequest, new ResponseCompleter(isolateRequest, commandLauncher.onReceive).future);
 
-      isolateLauncher.processRequest(isolateRequest);
+      commandLauncher.processRequest(isolateRequest);
 //      .then((IsolateLauncher l) {
 //        l.send(isolateRequest);
 //      });
@@ -237,6 +233,4 @@ class TestrunnerServer {
     _runFileTestsResponseCache.clear();
     _connectedClients.forEach((l) => l.add(event.toJson()));
   }
-
 }
-

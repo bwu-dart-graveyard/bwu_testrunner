@@ -42,7 +42,7 @@ class ResponseForwarder {
     _responseSubscription = responseStream.listen(_responseHandler);
     var to = timeout;
     if(to == null) {
-      to = new Duration(seconds: 120);
+      to = new Duration(seconds: 480);
     }
     _timeout = new async.Timer(to, _timeoutHandler);
   }

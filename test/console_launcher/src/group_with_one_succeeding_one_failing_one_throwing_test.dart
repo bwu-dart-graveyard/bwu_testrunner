@@ -15,7 +15,7 @@ void main() {
       expect(true, isFalse);
     });
 
-    test('failing test', () {
+    test('throwing test', () {
       throw 'anything';
     });
 

@@ -111,7 +111,6 @@ abstract class Response extends Message {
   }
 }
 
-
 typedef void MessageSink(Message message);
 
 typedef bool MessageFilter(Message message);
@@ -556,8 +555,8 @@ class TestFileChanged extends Message {
 class TestRunProgress extends Response {
   static const NONE = 0;
   static const STARTED = 1;
-  static const RESULT_UPDATE = 2;
-  static const RESULT = 3;
+  static const RESULT = 2;
+  static const RESULT_UPDATE = 3;
   static const LOG_MESSAGE = 4;
   static const DONE = 5;
 

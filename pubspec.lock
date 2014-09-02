@@ -4,15 +4,15 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.22.2"
+    version: "0.22.4"
   args:
     description: args
     source: hosted
-    version: "0.12.0+1"
+    version: "0.12.0+2"
   barback:
     description: barback
     source: hosted
-    version: "0.15.0"
+    version: "0.15.0+1"
   bignum:
     description: bignum
     source: hosted
@@ -26,15 +26,15 @@ packages:
       path: "../bwu_datagrid"
       relative: true
     source: path
-    version: "0.0.14"
+    version: "0.0.15"
   bwu_fontawesome_iconset_svg:
     description: bwu_fontawesome_iconset_svg
     source: hosted
-    version: "0.0.5+1"
+    version: "0.0.6+2"
   bwu_sparkline:
     description: bwu_sparkline
     source: hosted
-    version: "0.0.3"
+    version: "0.0.4"
   bwu_utils:
     description: bwu_utils
     source: hosted
@@ -54,11 +54,11 @@ packages:
   collection:
     description: collection
     source: hosted
-    version: "0.9.4"
+    version: "1.0.0"
   core_elements:
     description: core_elements
     source: hosted
-    version: "0.1.1+2"
+    version: "0.2.0+1"
   crypto:
     description: crypto
     source: hosted
@@ -82,7 +82,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.11.5"
+    version: "0.11.6"
   logging:
     description: logging
     source: hosted
@@ -102,7 +102,7 @@ packages:
   paper_elements:
     description: paper_elements
     source: hosted
-    version: "0.1.0+3"
+    version: "0.1.1+2"
   path:
     description: path
     source: hosted
@@ -110,7 +110,7 @@ packages:
   polymer:
     description: polymer
     source: hosted
-    version: "0.12.2+1"
+    version: "0.13.0+1"
   polymer_expressions:
     description: polymer_expressions
     source: hosted
@@ -150,7 +150,7 @@ packages:
   template_binding:
     description: template_binding
     source: hosted
-    version: "0.12.0+4"
+    version: "0.12.1"
   unittest:
     description: unittest
     source: hosted
@@ -170,8 +170,8 @@ packages:
   web_components:
     description: web_components
     source: hosted
-    version: "0.5.0+1"
+    version: "0.6.0+1"
   yaml:
     description: yaml
     source: hosted
-    version: "2.0.0"
+    version: "2.0.1+1"

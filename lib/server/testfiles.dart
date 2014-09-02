@@ -32,14 +32,14 @@ class TestFiles {
   }
 
   void _testFilesChangedHandler(w.WatchEvent e) {
-    if(e.path.contains('/packages/')) {
+    if(e.path.contains('/packages/') || e.path.contains('tmp_bwu_testrunner_')) {
       print('Ignore file change in "${e.path}".');
       return;
     }
     // TODO(zoechi) send notifications so interested parties know what has changed
     // stop isolate when the test file was modified
     // add remove test files
-    print('testfiles changed');
+    print('testfiles changed: ${e.path}');
     // TODO findTestFiles();
 
     var changedFile = new io.File(e.path);

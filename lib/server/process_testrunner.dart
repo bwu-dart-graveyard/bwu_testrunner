@@ -1,42 +1,71 @@
-library bwu_testrunner.server.isolate;
+library bwu_testrunner.server.process_testrunner;
 
 import 'dart:async' as async;
-import 'dart:isolate';
+import 'dart:io' as io;
 import 'package:unittest/unittest.dart' as ut;
 import 'package:bwu_testrunner/server/unittest_configuration.dart' as utc;
 import 'package:bwu_testrunner/shared/message.dart';
 
 /**
- * Isolate implementation. When the [IsolateLauncher] launches an isolate,
- * all the main method does is to create an instance of [IsolateTestrunner].
+ * Process implementation. When the [ProcessLauncher] launches a process,
+ * all the main method does is to create an instance of [ProcessTestrunner].
  * All further processing is done from here.
  */
-class IsolateTestrunner {
+class ProcessTestrunner {
 
-  /// The port to the [IsolateLauncher]
-  final SendPort _sendPort;
+  /// The port to the [ProcessLauncher]
+  /* final SendPort _sendPort; */
   /// the reference to the main method to execute the tests.
   final Function _main;
   /// The first argument is the path of the test file.
   final List<String> _args;
-  /// The port to receive messages from the main isolate ([IsolateLauncher])
-  final ReceivePort receivePort = new ReceivePort();
+  /// The port to receive messages from the main isolate ([ProcessLauncher])
+  //final ReceivePort receivePort = new ReceivePort();
   /// The unit test configuration used when running tests.
   utc.UnittestConfiguration _config;
 
   String _filePath;
+  String _serverUrl;
 
   final List<async.StreamSubscription> _subscriptions = [];
 
-  IsolateTestrunner(this._sendPort, this._main, this._args) {
-    _filePath = _args[0];
-    _subscriptions.add(receivePort.listen(_onMessage));
+  ProcessTestrunner(this._main, this._args) {
+    print('args: ${_args}');
+    _serverUrl = _args[0];
+    _filePath = _args[1];
+    print('Process CWD: ${io.Directory.current}');
     ut.groupSep = "~|~";
     _config = new utc.UnittestConfiguration(_main);
     ut.unittestConfiguration = _config;
-    _sendPort.send(receivePort.sendPort);
     _subscriptions.add(_config.onTestProgress.listen((m) => _send((m..path = _filePath))));
     _subscriptions.add(_config.onFileTestResult.listen((m) => _send((m..path = _filePath))));
+    _connect();
+  }
+
+  io.WebSocket _socket;
+
+  /// Connect to the server.
+  async.Future<bool> _connect() {
+    //var completer = new async.Completer();
+    print('ServerUrl: ${_serverUrl}');
+    return io.WebSocket.connect(_serverUrl)
+    .then((socket) {
+      print('Process connected.');
+      _socket = socket;
+      _socket.listen((String e) {
+        print('Process received: ${e}');
+        _onMessage(new Message.fromJson(e));
+
+        _socket.done.then((_) => _exit());
+//        ..onClose.listen(_onDone)
+//        ..onError.listen(print)
+//        ..onOpen.first.then((_) {
+        print('Connected');
+        //completer.complete(true);
+      });
+
+//      return completer.future;
+    });
   }
 
   bool _isUsed = false;
@@ -44,7 +73,7 @@ class IsolateTestrunner {
   /// Dispatch incoming message processing.
   void _onMessage(message) {
     //var msg = new Message.fromJson(json);
-    print('Isolate process message ${message}');
+    print('Process process message ${message}');
 
     switch(message.messageType) {
       case StopIsolateRequest.MESSAGE_TYPE:
@@ -61,7 +90,7 @@ class IsolateTestrunner {
         _runFileTestsRequestHandler(message);
         break;
     }
-    //print('child isolate - message "${msg.messageType}" received: $json');
+    //print('child process - message "${msg.messageType}" received: $json');
   }
 
   /// One isolate can only execute one command (UnitTest library limitation)
@@ -69,21 +98,24 @@ class IsolateTestrunner {
   _checkIsUsed() {
     if(_isUsed) {
       _send((new ErrorMessage()..errorMessage =
-      'Isolate already used. An isolate can only execute one command.'));
+      'Process already used. An process can only execute one command.'));
       return;
     }
     _isUsed = true;
   }
 
-  _exit() {
+  // Exit the process.
+  void _exit() {
     _send(new StopIsolateRequest());
     _subscriptions.forEach((s) => s.cancel());
     _config = null;
     new async.Future(() {
-      receivePort.close();
+      _socket.close();
+      io.exit(0);
+      //receivePort.close();
     });
 //    new async.Future(() {
-//      throw('Intentionally ending isolate for ${_filePath}');
+//      throw('Intentionally ending process for ${_filePath}');
 //    });
   }
 
@@ -169,8 +201,8 @@ class IsolateTestrunner {
   }
 
   void _send(Message response) {
-    print('Isolate send: $response');
-    _sendPort.send(response);
+    print('Process send: $response');
+    _socket.add(response.toJson());
   }
 }
 

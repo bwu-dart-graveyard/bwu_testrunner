@@ -67,14 +67,16 @@ class Connection {
   /// in the file.
   async.Future<Response> runAllTestsRequest() {
     var request = new RunFileTestsRequest();
-    var responseCollector =  new ResponseCollector(request, timeout: new Duration(seconds: 180));
+    var responseCollector =  new ResponseCollector(request, timeout: new Duration(seconds: 500));
     //var requests = <async.Future>[];
 
     //responseCollector.subRequests.add(runFileTestsRequest(testList.consoleTestFiles.first.path));
-    testList.consoleTestFiles.forEach((ctf) {
-      var request = _createRunFileTestsRequest(ctf.path);
-      responseCollector.addSubRequest(request, _sendRunFileTestsRequest(request));
-    });
+    if(testList != null) {
+      testList.consoleTestFiles.forEach((ctf) {
+        var request = _createRunFileTestsRequest(ctf.path);
+        responseCollector.addSubRequest(request, _sendRunFileTestsRequest(request));
+      });
+    }
     //async.Future.wait(requests)
     return responseCollector.wait()
     .then((MessageList responses) {

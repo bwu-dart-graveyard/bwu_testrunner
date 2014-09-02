@@ -3,6 +3,7 @@ library bwu_testrunner.client.components.app_element;
 import 'dart:html' as dom;
 import 'dart:math' as math;
 import 'package:polymer/polymer.dart';
+import 'package:intl/intl.dart' as intl;
 
 import 'package:bwu_datagrid/bwu_datagrid.dart';
 import 'package:bwu_datagrid/dataview/dataview.dart';
@@ -47,12 +48,12 @@ class AppElement extends PolymerElement {
       new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
 //    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
       new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true, formatter: new StatusFormatter()),
-      new Column(id: "result", name: "Result", field: "result", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
-      new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 70, sortable: true/*, groupTotalsFormatter: new SumTotalsFormatter()*/),
-      new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
-      new Column(id: "startTime", name: "Start", field: "startTime", width: 70, sortable: true, groupTotalsFormatter: new SumTotalsFormatter()),
-      new Column(id: "message", name: "Msg", field: "message", width: 35, sortable: false),
+//      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true, formatter: new StatusFormatter()),
+      new Column(id: "result", name: "Result", field: "result", width: 30, sortable: true, formatter: new ResultFormatter() /*, groupTotalsFormatter: new SumTotalsFormatter()*/),
+      new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 30, sortable: true, formatter: new ResultFormatter('prev-result') /*, groupTotalsFormatter: new SumTotalsFormatter()*/),
+      new Column(id: "startTime", name: "Start", field: "startTime", width: 55, sortable: true, formatter: new StartTimeFormatter()),
+      new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 55, sortable: true, formatter: new DurationFormatter(), groupTotalsFormatter: new SumTotalsFormatter()),
+      new Column(id: "message", name: "Msg", field: "message", width: 70, sortable: false),
       //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
   ];
 
@@ -121,7 +122,7 @@ class AppElement extends PolymerElement {
 //      dataView.setFilterArgs({
 //        'percentComplete': percentCompleteThreshold
 //      });
-      loadData(50);
+      loadData();
 //      groupByDuration();
       //dataView.endUpdate();
 
@@ -131,46 +132,99 @@ class AppElement extends PolymerElement {
 
   math.Random rnd = new math.Random();
 
-  void loadData(int count) {
+  void loadData() {
     wsClient = new Client(grid, dataView);
   }
 
   int comparer(DataItem a, DataItem b) {
-
     var x = a[sortCol], y = b[sortCol];
-    if (x == y) {
-      return 0;
-    }
-
-    if (x is Comparable) {
-      return x.compareTo(y);
-    }
-
-    if (y is Comparable) {
-      return 1;
-    }
-
+    if (x == y) return 0;
+    if (x is Comparable) return x.compareTo(y);
+    if (y is Comparable) return 1;
     if (x == null && y != null) {
       return -1;
     } else if (x != null && y == null) {
       return 1;
     }
-
-    if (x is bool) {
-      return x == true ? 1 : 0;
-    }
+    if (x is bool) return x == true ? 1 : 0;
     return (x == y ? 0 : (x > y ? 1 : -1));
   }
 }
 
+class DurationFormatter extends fm.Formatter {
+  var msFormatter = new intl.NumberFormat('000', 'en_US');
+  var timePartFormatter = new intl.NumberFormat('00', 'en_US');
+  void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
+    var result;
+    if(value == null) {
+      result = '';
+    } else if(value is Duration) {
+      int minutes = value.inMinutes.remainder(Duration.MINUTES_PER_HOUR);
+      int seconds = value.inSeconds.remainder(Duration.SECONDS_PER_MINUTE);
+      int ms = value.inMilliseconds .remainder(Duration.MILLISECONDS_PER_SECOND);
+      result = '${minutes}:${timePartFormatter.format(seconds)}.${msFormatter.format(ms)}';
+    } else {
+      result = value.toString();
+    }
+    target.appendHtml(result);
+  }
+}
 
-class StatusFormatter extends fm.Formatter {
+class StartTimeFormatter extends fm.Formatter {
+  void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
+    var result;
+    if(value == null) {
+      result = '';
+    } else if(value is DateTime) {
+      var d = new DateTime.now().difference(value as DateTime);
+      if(d.inDays > 0) {
+        result = '> ${d.inDays} d';
+      } else if(d.inHours > 0) {
+        result = '> ${d.inHours} h';
+      } else if(d.inMinutes > 0) {
+        result = '> ${d.inMinutes} min';
+      } else {
+        result = '> ${d.inSeconds} s';
+      }
+    } else {
+      result = value.toString();
+    }
+    target.appendHtml(result);
+  }
+}
+
+class ResultFormatter extends fm.Formatter {
+  String cssPrefix;
+  ResultFormatter([this.cssPrefix = 'result']) {
+    assert(cssPrefix != null);
+  }
+
   void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
     var result;
     if(value == null) {
       result = '';
     } else {
-      result = value.toString();
+      var icon;
+      var cssClass;
+      switch (value) {
+        case 'error':
+          icon = 'fa:exclamation-circle';
+          cssClass = 'error';
+          break;
+      case 'fail':
+          icon = 'fa:exclamation-triangle';
+          cssClass = 'fail';
+          break;
+      case 'pass':
+          icon = 'fa:check-square'; // check, check-circle
+          cssClass = 'pass';
+          break;
+      case 'timeout':
+          icon = 'fa:clock-o';
+          cssClass = 'timeout';
+          break;
+      }
+      result = '<core-icon icon="${icon}" class="test-result ${cssPrefix}-${cssClass}"></core-icon>';
     }
     target.appendHtml(result);
   }

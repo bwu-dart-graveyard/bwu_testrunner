@@ -34,7 +34,7 @@ class ResponseCollector {
     _listeners.add(this);
     _timeout = timeout;
     if(_timeout == null) {
-      _timeout = new Duration(seconds: 120);
+      _timeout = new Duration(seconds: 480);
     }
     completer.future.timeout(_timeout, onTimeout: _timeoutHandler);
   }
@@ -46,7 +46,7 @@ class ResponseCollector {
         results[req] = response;
         _checkComplete();
       })
-      ..timeout(new Duration(seconds: 25), onTimeout: () {
+      ..timeout(new Duration(seconds: 480), onTimeout: () {
         //_subRequests.forEach((k, v) {
           if(!results.containsKey(req)) {
             results[req] = req.timedOutResponse();
