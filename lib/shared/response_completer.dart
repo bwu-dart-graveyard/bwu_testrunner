@@ -9,12 +9,12 @@ import 'package:bwu_testrunner/shared/message.dart';
  * When the response doesn't arrive within the timeout [Duration] the
  * [async.Future] completes with a [Timeout] message.
  */
-class ResponseCompleter {
+class ResponseCompleter<TRequest extends Request,TResponse extends Response> {
 
   /// A static list that references all active [ResponseCompleter]s.
   static final List<ResponseCompleter> _listeners = [];
 
-  final async.Completer completer = new async.Completer<Message>();
+  final async.Completer completer = new async.Completer<TResponse>();
 
   /// The [async.Future] to wait for the response to arrive.
   async.Future get future => completer.future;
@@ -23,7 +23,7 @@ class ResponseCompleter {
   async.StreamSubscription _responseSubscription;
 
   /// The id of the request message to wait for responses.
-  final Request _request;
+  final TRequest _request;
 
   ResponseCompleter(this._request, async.Stream responseStream, {Duration timeout}) {
     _listeners.add(this);

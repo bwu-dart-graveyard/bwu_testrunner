@@ -45,16 +45,14 @@ class AppElement extends PolymerElement {
 
   List<Column> columns = [
       //new Column(id: "sel", name: "#", field: "sel", cssClass: "cell-selection", width: 40, resizable: false, sortable: true, focusable: false, editor: new ed.CheckboxEditor(), formatter: new fm.CheckmarkFormatter()),
-      new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-//    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-      new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
-//      new Column(id: "status", name: "Status", field: "status", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true, formatter: new StatusFormatter()),
       new Column(id: "result", name: "Result", field: "result", width: 30, sortable: true, formatter: new ResultFormatter() /*, groupTotalsFormatter: new SumTotalsFormatter()*/),
       new Column(id: "prevresult", name: "Prev. Result", field: "prevresult", width: 30, sortable: true, formatter: new ResultFormatter('prev-result') /*, groupTotalsFormatter: new SumTotalsFormatter()*/),
+//      new Column(id: "file1", name: "", field: "file1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+//    new Column(id: "group1", name: "", field: "group1", width: 50, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
+      new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
       new Column(id: "startTime", name: "Start", field: "startTime", width: 55, sortable: true, formatter: new StartTimeFormatter()),
       new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 55, sortable: true, formatter: new DurationFormatter(), groupTotalsFormatter: new SumTotalsFormatter()),
-      new Column(id: "message", name: "Msg", field: "message", width: 70, sortable: false),
-      //new Column(id: "%", name: "% Complete", field: "percentComplete", width: 80, sortable: true /*, formatter: new fm.PercentCompleteBarFormatter(), groupTotalsFormatter: new AvgTotalsFormatter()*/),
+      new Column(id: "message", name: "Message", field: "message", width: 5000, sortable: false),
   ];
 
   var gridOptions = new GridOptions(

@@ -129,12 +129,12 @@ class Client {
     dataView.endUpdate();
     grid.render();
 
-    new async.Timer.periodic(new Duration(minutes: 1), (_) {
-      if(dataView != null) {
-        grid.invalidateAllRows();
-        grid.render();
-      }
-    });
+//    new async.Timer.periodic(new Duration(minutes: 1), (_) {
+//      if(dataView != null) {
+//        grid.invalidateAllRows();
+//        grid.render();
+//      }
+//    });
   }
 
   /// Add the tests of a test group to the grid data.

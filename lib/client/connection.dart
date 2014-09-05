@@ -102,7 +102,7 @@ class Connection {
   }
 
   async.Future<FileTestsResult> _sendRunFileTestsRequest(RunFileTestsRequest request) {
-    var future =  new ResponseCompleter(request, onReceive).future;
+    var future =  new ResponseCompleter<RunFileTestsRequest, FileTestsResult>(request, onReceive).future;
     _socket.send(request.toJson());
     return future;
   }

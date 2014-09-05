@@ -5,7 +5,10 @@
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_column_picker/bwu_column_picker.html'>
 <link rel='import' href='../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html'>
 
-<link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>
+<!--<link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>-->
+<link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
+<link rel='import' href='../../../../packages/paper_elements/paper_radio_group.html'>
+<link rel='import' href='../../../../packages/paper_elements/paper_radio_button.html'>
 <link rel="import" href="../../../../packages/core_elements/av_icons.html">
 <link rel="import" href="../../../../packages/core_elements/core_iconset.html">
 <link rel="import" href="../../../../packages/core_elements/core_icon.html">
@@ -17,86 +20,8 @@
   <template>
     <!--<link rel="stylesheet" href="../../../../packages/bwu_datagrid/asset/smoothness/jquery-ui-1.8.16.custom.css"">-->
 
-    <style>
-      * /deep/ * {
-        font-family: sans-serif,arial;
-        font-size: 8pt;
-      }
+    <link rel="stylesheet" href="app_element.css">
 
-      #header {
-        border: 1px solid gray;
-        padding: 0;
-        margin: 0;
-        height: 100px;
-      }
-
-      #grid {
-        height: calc(100vh - 150px);
-        border: 1px solid gray;
-        /*outline: 0;*/
-      }
-
-      * /deep/ .cell-effort-driven {
-        text-align: center;
-      }
-
-      * /deep/ .bwu-datagrid-group-title[level='0'] {
-        font-weight: bold;
-      }
-
-      * /deep/ .bwu-datagrid-group-title[level='1'] {
-        text-decoration: underline;
-      }
-
-      * /deep/ .bwu-datagrid-group-title[level='2'] {
-        font-style: italic;
-      }
-
-
-      paper-fab::shadow core-icon svg {
-        fill: lightgray;
-      }
-
-      /*paper-fab:hover::shadow core-icon svg {*/
-        /*fill: white;*/
-      /*}*/
-
-      paper-fab.running::shadow core-icon svg {
-        fill: green;
-      }
-
-      paper-fab.running:hover::shadow core-icon svg {
-        fill: red;
-      }
-
-      paper-fab.running {
-        background-color: white;
-      }
-
-      bwu-datagrid /deep/ core-icon.test-result {
-        width: 18px;
-        height: 18px;
-      }
-
-      bwu-datagrid /deep/ core-icon.result-error,
-      bwu-datagrid /deep/ core-icon.result-fail,
-      bwu-datagrid /deep/ core-icon.result-timeout {
-        fill: red;
-      }
-
-      bwu-datagrid /deep/ core-icon.result-pass {
-        fill: green;
-      }
-
-      bwu-datagrid /deep/ core-icon.prev-result-error,
-      bwu-datagrid /deep/ core-icon.prev-result-fail,
-      bwu-datagrid /deep/ core-icon.prev-result-timeout {
-        fill: #fcc;
-      }
-
-      bwu-datagrid /deep/ core-icon.prev-result-pass {
-        fill: #aca;
-      }
     </style>
     <bwu-fontawesome-iconset-svg></bwu-fontawesome-iconset-svg>
     <div id="header">
@@ -106,21 +31,31 @@
       <core-icon id="run" icon="av:play-arrow" style="width=80px; height=80px;"></core-icon>
       <paper-icon-button icon="av:play-arrow"></paper-icon-button>
       <core-icon id="run2" icon="fa:glass" iconSize="150" style="width=80px; height=80px;"></core-icon> -->
-      <paper-fab icon="fa:forward" on-mouseover="{{wsClient.runFileTestsHandler}}"></paper-fab>
-      <!-- av:play-arrow -->
-      <ul>
-        <li>all tests</li>
-        <li>all failed tests</li>
-        <li>selected tests</li>
-        <li>selected failed tests</li>
-        <li>current group</li>
-        <li>current group failed tests</li>
-        <li></li>
+      <!--<paper-fab icon="fa:forward" on-mouseover="{{wsClient.runFileTestsHandler}}"></paper-fab>-->
+      <div horizontal layout>
+        <div class="runtests radiogroup">
+          <paper-radio-group class="runtests" vertical layout>
+            <paper-radio-button id="all" label="All" checked></paper-radio-button>
+            <paper-radio-button id="failed" label="Failed"></paper-radio-button>
+            <paper-radio-button id="flaky" label="Flaky"></paper-radio-button>
+          </paper-radio-group>
+        </div>
 
-      </ul>
+        <div vertical layout>
+          <span class="runtests caption">Run Tests</span>
+          <div horizontal >
+            <paper-icon-button class="runtests all" icon="fa:forward" label="All" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
+            <paper-icon-button class="runtests selected" icon="fa:forward" label="Selected" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
+            <paper-icon-button class="runtests group" icon="fa:forward" label="Group" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <bwu-datagrid id="grid"></bwu-datagrid>
-    <bwu-pager id='pager' style='width:100%;'></bwu-pager>
+    <div class="gridwrapper">
+      <bwu-datagrid id="grid"></bwu-datagrid>
+      <bwu-pager id='pager'></bwu-pager>
+    </div>
   </template>
   <script type="application/dart" src="app_element.dart"></script>
 </polymer-element>

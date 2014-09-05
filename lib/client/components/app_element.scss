@@ -1,0 +1,205 @@
+/*$even-row-background-color:#f4f4f4;*/
+$even-row-background-color:#fcfcfc;
+$header-background-color:#f5f5f5;
+$border-dark-color:#d8d8d8;
+$row-border-color:#eee;
+$caption-color:#333333;
+$success-color:#1db34f;
+
+/* font
+----------------------------------*/
+* /deep/ * {
+  font-family: arial, sans-serif;
+  font-size: 8pt;
+}
+
+/* header
+----------------------------------*/
+#header {
+  padding: 0;
+  margin: 0;
+  height: 100px;
+}
+
+/* wrap grid and pager
+----------------------------------*/
+div.gridwrapper  {
+  margin: 8px 8px 0 8px;
+  height: calc(100vh - 150px);
+  border: 1px solid $border-dark-color;
+  border-radius: 3px;
+}
+
+
+/* grid
+----------------------------------*/
+#pager {
+  border: none;
+}
+
+#grid {
+  height: 100%;
+
+  /deep/ {
+    .cell-effort-driven {
+      text-align: center;
+    }
+
+    /* group headers */
+    .bwu-datagrid-group-title[level='0'] {
+      font-weight: bold;
+      font-style: italic;
+    }
+
+    .bwu-datagrid-group-title[level='1'] {
+      font-weight: bold;
+      /* text-decoration: underline; */
+    }
+
+    .bwu-datagrid-group-title[level='2'] {
+      font-style: italic;
+    }
+
+    /* result icons */
+    core-icon.test-result {
+      width: 18px;
+      height: 18px;
+    }
+
+    core-icon.result-error,
+    core-icon.result-fail,
+    core-icon.result-timeout {
+      fill: red;
+    }
+
+    core-icon.result-pass {
+      fill: $success-color;
+    }
+
+    core-icon.prev-result-error,
+    core-icon.prev-result-fail,
+    core-icon.prev-result-timeout {
+      fill: #fcc;
+    }
+
+    core-icon.prev-result-pass {
+      fill: #aca;
+    }
+
+    #headerScroller.bwu-datagrid-header {
+      border: none;
+      background: none;
+    }
+
+    #bwuDatagridHeaders.bwu-datagrid-header-columns {
+      border: none;
+      border-bottom: 1px solid $border-dark-color;
+      background: none;
+    }
+
+    bwu-datagrid-header-column.bwu-datagrid-header-column:first-of-type {
+      border-left-color: $header-background-color;
+    }
+
+    bwu-datagrid-header-column.bwu-datagrid-header-column {
+      background: $header-background-color none;
+      border: 1px solid $even-row-background-color;
+      border-top-color: $header-background-color;
+      border-right-color: $header-background-color;
+      border-bottom: none;
+      font-weight: bold;
+    }
+
+    .bwu-datagrid-row {
+      color: #666 !important;
+      bwu-datagrid-cell {
+        border: 1px solid;
+      }
+    }
+
+    .bwu-datagrid-row.odd .bwu-datagrid-cell {
+      border-color: $row-border-color;
+      border-left-color: white;
+      border-right-color: white; /*$even-row-background-color;*/
+    }
+
+    .bwu-datagrid-row.even .bwu-datagrid-cell {
+      border-color: $even-row-background-color;
+    }
+
+    .bwu-datagrid-row.even .bwu-datagrid-cell:first-of-type {
+      border-left-color: $even-row-background-color;
+    }
+
+      .bwu-datagrid-row.even .bwu-datagrid-cell.selected,
+    .bwu-datagrid-row.odd .bwu-datagrid-cell.selected {
+      background-color: #D3EFFA;
+      border-color: #D3EFFA;
+      border-bottom-color: $row-border-color;
+    }
+  }
+}
+
+/* wrap the radio group with the tile
+----------------------------------*/
+div.runtests.radiogroup {
+  padding: 14px 12px 0 8px;
+}
+
+/* make the radio-buttons smaller
+----------------------------------*/
+paper-radio-group.runtests {
+  paper-radio-button {
+    padding: 6px;
+  }
+
+  paper-radio-button::shadow paper-ripple#ink {
+    top: -8px;
+    left: -8px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* radio-group label
+----------------------------------*/
+span.runtests.caption {
+  padding: 7px 3px 3px 7px;
+}
+
+
+/* run buttons
+----------------------------------*/
+paper-icon-button.runtests {
+  margin: 5px;
+  background-color: white;
+  width: 75px;
+
+  /deep/ #clip #content span {
+    width: 60px;
+  }
+}
+
+paper-icon-button.runtests::shadow {
+  core-icon svg {
+    fill: darkgray;
+  }
+}
+
+paper-icon-button.runtests.running::shadow {
+  core-icon svg {
+    fill: red;
+  }
+}
+
+paper-icon-button.runtests.running:hover {
+  background-color: lightgray;
+}
+
+paper-icon-button.runtests.running:hover::shadow core-icon svg {
+  fill: lightgray;
+}
+
+
+
+
