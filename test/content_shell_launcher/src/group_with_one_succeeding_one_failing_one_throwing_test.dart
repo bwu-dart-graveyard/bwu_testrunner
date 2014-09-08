@@ -6,7 +6,7 @@ import "package:unittest/html_config.dart" show useHtmlConfiguration;
 void main() {
   useHtmlConfiguration();
 
-  group('Group with one succeeding one failing one throwing test -', () {
+  group('Group with one succeeding one failing one throwing test', () {
 
     test('succeding test', () {
       expect(true, isTrue);

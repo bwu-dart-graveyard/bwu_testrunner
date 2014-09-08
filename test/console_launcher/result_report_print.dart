@@ -10,7 +10,7 @@ import 'package:bwu_testrunner/result_report_print.dart';
 
 void main() {
 
-  group('ConsoleLauncher -', () {
+  group('ConsoleLauncher', () {
 
     test('result report print test', () {
       var configs = TestConfig.load('src/result_report_print_test_run_config.json');

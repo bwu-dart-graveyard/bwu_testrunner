@@ -5,7 +5,7 @@ import 'package:unittest/unittest.dart';
 
 void main() {
 
-  group('Group with one skipped test -', () {
+  group('Group with one skipped test', () {
 
     skip_test('skipped test', () {
       expect(true, isTrue);

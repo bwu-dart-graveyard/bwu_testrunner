@@ -6,7 +6,7 @@ import "package:unittest/html_config.dart" show useHtmlConfiguration;
 void main() {
   useHtmlConfiguration();
 
-  group('A group with one throwing test -', () {
+  group('A group with one throwing test', () {
 
     test('throwing test', () {
       throw 'anything';

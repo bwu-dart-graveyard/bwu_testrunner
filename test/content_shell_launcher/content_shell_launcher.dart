@@ -16,7 +16,7 @@ void main() {
   workingDir = io.Directory.current.parent.parent;
   pubServePort = 18080;
 
-  group('ContentShellLauncher -', () {
+  group('ContentShellLauncher', () {
 
     setUp(() {
     });

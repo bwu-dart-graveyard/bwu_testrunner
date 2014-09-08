@@ -7,7 +7,7 @@ import 'package:bwu_testrunner/content_shell_launcher.dart';
 
 
 void main() {
-  group('Load config -', () {
+  group('Load config', () {
 
     test('simple test', () {
       var configs = TestConfig.load('run_config.json');
@@ -55,13 +55,13 @@ void main() {
 
   });
 
-  group('Launch console -', () {
+  group('Launch console', () {
 
     test('simple test', () {
     });
   });
 
-  group('Launch content_shell -', () {
+  group('Launch content_shell', () {
 
     test('simple test', () {
     });

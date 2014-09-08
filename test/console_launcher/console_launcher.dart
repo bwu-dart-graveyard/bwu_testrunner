@@ -6,7 +6,7 @@ import 'package:bwu_testrunner/console_launcher.dart';
 
 void main() {
 
-  group('ConsoleLauncher -', () {
+  group('ConsoleLauncher', () {
 
     test('group with one succeeding test', () {
       var configs = TestConfig.load('src/group_with_one_succeeding_test_run_config.json');

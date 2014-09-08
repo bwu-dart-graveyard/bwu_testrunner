@@ -5,7 +5,7 @@ import 'package:unittest/unittest.dart';
 
 void main() {
 
-  group('Group with one succeeding one failing one throwing test -', () {
+  group('Group with one succeeding one failing one throwing test', () {
 
     test('succeding test', () {
       expect(true, isTrue);
