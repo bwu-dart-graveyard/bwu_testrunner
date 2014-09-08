@@ -8,7 +8,5 @@ build/
 .settings
 *.exe
 *.*~
-*.dart.js
-*.dart.js.deps
-*.dart.js.map
-
+.idea
+*.css.map
