@@ -182,7 +182,7 @@ class _IsolateCommand {
 
     io.File main;
     io.Directory tmpDir;
-    var tmpMainName = path.join(io.Directory.current.path, 'tmp_bwu_testrunner_${Message.UUID.v4()}');
+    var tmpMainName = path.join(io.Directory.current.path, '.tmp_bwu_testrunner_${Message.UUID.v4()}');
 
      main = new io.File(tmpMainName);
      main.writeAsString(_mainContent(_testFile), flush: true)
@@ -308,7 +308,7 @@ class _ProcessCommand {
     io.File main;
     io.Directory tmpDir;
     io.Directory workingDir = new io.Directory(path.dirname(_testFile.path));
-    var tmpMainName = path.join(workingDir.path, 'tmp_bwu_testrunner_${Message.UUID.v4()}.dart');
+    var tmpMainName = path.join(workingDir.path, '.tmp_bwu_testrunner_${Message.UUID.v4()}.dart');
 
     main = new io.File(tmpMainName);
     main.writeAsString(_mainContent(_testFile), flush: true)
