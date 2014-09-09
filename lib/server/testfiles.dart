@@ -32,7 +32,7 @@ class TestFiles {
   }
 
   void _testFilesChangedHandler(w.WatchEvent e) {
-    if(e.path.contains('/packages/') || e.path.contains('tmp_bwu_testrunner_')) {
+    if(e.path.contains('/packages/') || e.path.contains('.tmp_bwu_testrunner_')) { // TODO(zoechi) make .tmp_bwu_xxx a const and use this everywhere
       print('Ignore file change in "${e.path}".');
       return;
     }

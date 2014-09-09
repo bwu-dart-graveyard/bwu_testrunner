@@ -24,28 +24,25 @@ class Client {
 
   Client(this.grid, this.dataView) {
     _conn = new Connection()
-        ..onReceive.listen(_messageHandler)
-        ..connect(18070);
+      ..onReceive.listen(_messageHandler)
+      ..connect(18070);
     //.then((_) => _conn.requestTestList())
     //.then(_setGridData);
   }
 
   /// All messages received by the client are passed to this method.
   _messageHandler(Message message) {
-    dataView.beginUpdate();
     print('Client received: ${message.toJson()}');
     if (message is TestRunProgress) {
       var found = dataView.items.where((e) => e['file'] == message.path && e['testId'] == message.testId);
       if (found.length == 1) {
         var item = found.first;
         var row = dataView.items.indexOf(item);
-        print('status: ${message.status}');
+        print('result: ${message.result}');
         if (message.status != null) item['status'] = message.status;
         if (message.result != null) item['result'] = message.result;
         if (message.logMessage != null) item['message'] += message.logMessage;
-        dataView.updateItem(item[id], item);
-        //grid.invalidateRow(row);
-        //grid.render();
+        dataView.updateItem(item['id'], item);
       }
     } else if (message is FileTestsResult) {
       message.testResults.forEach((r) {
@@ -53,7 +50,7 @@ class Client {
         if (found.length == 1) {
           var item = found.first;
           var row = dataView.items.indexOf(item);
-          print('status: ${r.passed}');
+          print('result: ${r.result}');
           item['status'] = r.passed;
           item['result'] = r.result;
           item['startTime'] = r.startTime;
@@ -61,8 +58,6 @@ class Client {
           item['startTime'] = r.startTime;
           item['message'] = item['message'] == null ? r.message : item['message'] + r.message;
           dataView.updateItem(item['id'], item);
-          //grid.invalidateRow(row);
-          //grid.render();
         }
       });
       if (message.timedOut) {
@@ -76,8 +71,6 @@ class Client {
               item['message'] = 'timeout';
               dataView.updateItem(item[id], item);
             }
-            //grid.invalidateRow(row);
-            //grid.render();
           }
         });
       }
@@ -86,9 +79,6 @@ class Client {
         _setGridData(message);
       }
     }
-    //grid.invalidateAllRows();
-    //grid.render();
-    dataView.endUpdate();
   }
 
 
@@ -110,10 +100,9 @@ class Client {
 
     dataView.setItems(data);
 
-    groupByFileAndTestGroup(dataView);
+    groupByResult(dataView);
 
     dataView.endUpdate();
-    //grid.render();
 
 //    new async.Timer.periodic(new Duration(minutes: 1), (_) {
 //      if(dataView != null) {
@@ -126,40 +115,32 @@ class Client {
   /// Add the tests of a test group to the grid data.
   void _addGroup(String file, TestGroup parentGroup, TestGroup group, {int indent: 0}) {
     group.tests.forEach((t) => _addTest(file, group, t, indent: indent + 1));
-    group.groups.forEach((g) => _addGroup(file, group, g,  indent: indent + 1));
+    group.groups.forEach((g) => _addGroup(file, group, g, indent: indent + 1));
   }
 
   /// Add a test to the grid data.
   void _addTest(String file, TestGroup parentGroup, Test test, {int indent: 0}) {
     data.add(new MapDataItem({
-      'sel': false,
-      'id': id++,
-      'testId': test.id,
-      'type': 'test',
-      'file': file,
-      'group': parentGroup == null || parentGroup.name == null ? '' : parentGroup.name,
-      'test': test.name
+        'sel': false,
+        'id': id++,
+        'testId': test.id,
+        'type': 'test',
+        'file': file,
+        'group': parentGroup == null || parentGroup.name == null ? '' : parentGroup.name,
+        'test': test.name
     }));
   }
 
 
   bool _isWaitingForResponse = false;
+
   /// Creates a request sent to the server to run all tests.
   void runFileTestsHandler(dom.MouseEvent e) {
-    dataView.beginUpdate();
     dataView.items.forEach((item) {
-      item['prevresult'] = item['result'];
-      item['result'] = '';
-      item['status'] = '';
-      item['runningTime'] = '';
-      item['startTime'] = '';
-      item['message'] = '';
+      _resetTest(item);
     });
-    dataView.endUpdate();
-    //grid.invalidateAllRows();
-    //grid.render();
     var button = e.target as dom.Element;
-    if(_isWaitingForResponse) {
+    if (_isWaitingForResponse) {
       return;
     }
     _isWaitingForResponse = true;
@@ -170,6 +151,53 @@ class Client {
       _isWaitingForResponse = false;
     });
   }
-}
 
+
+  /// Creates a request sent to the server to run all selected tests.
+  void runSelectedTestsHandler(dom.MouseEvent e) {
+    dataView.items.forEach((item) {
+      _resetTest(item);
+    });
+    var button = e.target as dom.Element;
+    if (_isWaitingForResponse) {
+      return;
+    }
+    _isWaitingForResponse = true;
+    button.classes.add('running');
+    _conn.runAllTestsRequest()
+    .then((responses) {
+      button.classes.remove('running');
+      _isWaitingForResponse = false;
+    });
+  }
+
+  /// Creates a request sent to the server to run all selected tests.
+  void runActiveTestsHandler(dom.MouseEvent e) {
+    dataView.items.forEach((item) {
+      _resetTest(item);
+    });
+    var button = e.target as dom.Element;
+    if (_isWaitingForResponse) {
+      return;
+    }
+    _isWaitingForResponse = true;
+    button.classes.add('running');
+    _conn.runAllTestsRequest()
+    .then((responses) {
+      button.classes.remove('running');
+      _isWaitingForResponse = false;
+    });
+  }
+
+  _resetTest(DataItem item) {
+    item['prevresult'] = item['result'];
+    item['result'] = null;
+    item['status'] = null;
+    item['runningTime'] = null;
+    item['startTime'] = null;
+    item['message'] = null;
+    dataView.updateItem(item['id'], item);
+  }
+
+}
 

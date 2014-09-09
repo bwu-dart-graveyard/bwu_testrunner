@@ -26,7 +26,7 @@ packages:
       path: "../bwu_datagrid"
       relative: true
     source: path
-    version: "0.0.15"
+    version: "0.0.16"
   bwu_fontawesome_iconset_svg:
     description: bwu_fontawesome_iconset_svg
     source: hosted
@@ -50,7 +50,7 @@ packages:
   code_transformers:
     description: code_transformers
     source: hosted
-    version: "0.2.2"
+    version: "0.2.3"
   collection:
     description: collection
     source: hosted
@@ -102,7 +102,7 @@ packages:
   observe:
     description: observe
     source: hosted
-    version: "0.12.0"
+    version: "0.12.1+1"
   paper_elements:
     description: paper_elements
     source: hosted
@@ -114,7 +114,7 @@ packages:
   polymer:
     description: polymer
     source: hosted
-    version: "0.13.0+3"
+    version: "0.13.1"
   polymer_expressions:
     description: polymer_expressions
     source: hosted

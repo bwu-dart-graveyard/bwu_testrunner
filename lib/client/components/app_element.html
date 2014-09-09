@@ -1,60 +1,66 @@
-<!-- import polymer-element's definition -->
 <link rel="import" href="../../../../packages/polymer/polymer.html">
+
 <link rel="import" href="../../../../packages/bwu_datagrid/bwu_datagrid.html">
-<link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_pager/bwu_pager.html'>
 <link rel='import' href='../../../../packages/bwu_datagrid/components/bwu_column_picker/bwu_column_picker.html'>
 <link rel='import' href='../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html'>
 
-<!--<link rel='import' href='../../../../packages/paper_elements/paper_fab.html'>-->
 <link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
 <link rel='import' href='../../../../packages/paper_elements/paper_radio_group.html'>
 <link rel='import' href='../../../../packages/paper_elements/paper_radio_button.html'>
+<link rel='import' href='../../../../packages/paper_elements/paper_progress.html'>
 <link rel="import" href="../../../../packages/core_elements/av_icons.html">
 <link rel="import" href="../../../../packages/core_elements/core_iconset.html">
 <link rel="import" href="../../../../packages/core_elements/core_icon.html">
-<!--<link rel='import' href='../../../../packages/paper_elements/paper_icon_button.html'>
-<link rel="import" href="../../../../packages/bwu_fontawesome_iconset_svg/bwu_fontawesome_iconset_svg.html">
-<link rel="import" href="../../../../packages/core_elements/core_icon.html">-->
 
 <polymer-element name="app-element">
   <template>
-    <!--<link rel="stylesheet" href="../../../../packages/bwu_datagrid/asset/smoothness/jquery-ui-1.8.16.custom.css"">-->
-
     <link rel="stylesheet" href="app_element.css">
 
-    </style>
+
     <bwu-fontawesome-iconset-svg></bwu-fontawesome-iconset-svg>
-    <div id="header">
-      <!--<bwu-fontawesome-iconset-svg iconSize="80"></bwu-fontawesome-iconset-svg>
+    <div id="header" layout horizontal>
+      <div layout vertical>
+        <span class="run-tests caption">Run Tests</span>
 
-      <paper-icon-button id="fa:play" icon="fa:glass"></paper-icon-button>
-      <core-icon id="run" icon="av:play-arrow" style="width=80px; height=80px;"></core-icon>
-      <paper-icon-button icon="av:play-arrow"></paper-icon-button>
-      <core-icon id="run2" icon="fa:glass" iconSize="150" style="width=80px; height=80px;"></core-icon> -->
-      <!--<paper-fab icon="fa:forward" on-mouseover="{{wsClient.runFileTestsHandler}}"></paper-fab>-->
-      <div horizontal layout>
-        <div class="runtests radiogroup">
-          <paper-radio-group class="runtests" vertical layout>
-            <paper-radio-button id="all" label="All" checked></paper-radio-button>
-            <paper-radio-button id="failed" label="Failed"></paper-radio-button>
-            <paper-radio-button id="flaky" label="Flaky"></paper-radio-button>
-          </paper-radio-group>
-        </div>
-
-        <div vertical layout>
-          <span class="runtests caption">Run Tests</span>
+        <div layout horizontal>
           <div horizontal >
-            <paper-icon-button class="runtests all" icon="fa:forward" label="All" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
-            <paper-icon-button class="runtests selected" icon="fa:forward" label="Selected" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
-            <paper-icon-button class="runtests group" icon="fa:forward" label="Group" raisedbutton role="button" on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
+            <paper-icon-button class="run-tests all" icon="fa:forward" label="All"
+                               raisedbutton role="button"
+                               on-click="{{wsClient.runFileTestsHandler}}"></paper-icon-button>
+            <paper-icon-button class="run-tests selected" icon="fa:check-square-o"
+                               label="Selected" raisedbutton role="button"
+                               on-click="{{wsClient.runSelectedTestsHandler}}"></paper-icon-button>
+            <paper-icon-button class="run-tests active" icon="fa:play" label="Active"
+                               raisedbutton role="button"
+                               on-click="{{wsClient.runActiveTestsHandler}}"></paper-icon-button>
+          </div>
+
+          <div class="v-splitter"></div>
+
+          <div class="run-tests radiogroup">
+            <paper-radio-group class="run-tests" selected="all" vertical layout>
+              <paper-radio-button name="all" label="All"></paper-radio-button>
+              <paper-radio-button name="failed" label="Failed"></paper-radio-button>
+              <paper-radio-button name="flaky" label="Flaky"></paper-radio-button>
+            </paper-radio-group>
           </div>
         </div>
       </div>
 
+      <div class="v-splitter"></div>
+
+      <div vertical layout>
+        <span class="grouping caption">Group Tests</span>
+        <div class="grouping">
+          <paper-radio-group class="test-grouping" selected="{{groupingSelection}}" vertical layout>
+            <paper-radio-button name="result-first" label="Result first"></paper-radio-button>
+            <paper-radio-button name="result-last" label="File first"></paper-radio-button>
+          </paper-radio-group>
+        </div>
+      </div>
     </div>
-    <div class="gridwrapper">
+    <div class="grid-wrapper">
       <bwu-datagrid id="grid"></bwu-datagrid>
-      <bwu-pager id='pager'></bwu-pager>
     </div>
   </template>
   <script type="application/dart" src="app_element.dart"></script>

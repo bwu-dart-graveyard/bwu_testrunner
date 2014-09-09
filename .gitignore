@@ -1,12 +1,25 @@
+# build output
 lib/client/content
-packages
 build/
+*.css.map
+
+# pub
+packages
 .pub/
 #pubspec.lock
+
+# IDE configuration
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# log files
 .project
 .buildlog
-.settings
-*.exe
+
+# temp files
 *.*~
-.idea
-*.css.map
+.tmp*
+
+# other
+*.exe
