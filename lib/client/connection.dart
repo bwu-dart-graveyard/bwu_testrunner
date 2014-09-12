@@ -76,6 +76,10 @@ class Connection {
         var request = _createRunFileTestsRequest(ctf.path);
         responseCollector.addSubRequest(request, _sendRunFileTestsRequest(request));
       });
+      testList.htmlTestFiles.forEach((ctf) {
+        var request = _createRunFileTestsRequest(ctf.path);
+        responseCollector.addSubRequest(request, _sendRunFileTestsRequest(request));
+      });
     }
     //async.Future.wait(requests)
     return responseCollector.wait()

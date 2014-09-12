@@ -116,25 +116,53 @@ class TestrunnerServer {
   /// the first clients connect.
   void _initTestFilesListResponseCache() {
     var testListRequest = new TestListRequest();
-    var responseCollector = new ResponseCollector(testListRequest);
+    _testFilesListResponseCache = new TestList();
+    var consoleResponseCollector = new ResponseCollector(testListRequest);
+
     testFiles.consoleTestFiles.forEach((e) {
+      // TODO(zoechi) remove comments to re-enable when browser-launching is fixed
       var testFileRequest = new TestFileRequest()
-        ..path = e.path;
+      ..path = e.path;
       var commandLauncher = (new CommandLauncher(e, CommandLauncher.ISOLATE_COMMAND));
       var messageSink = new StreamMessageSink();
       commandLauncher.processRequest(testFileRequest, messageSink: messageSink);
-      responseCollector.addSubRequest(testFileRequest, messageSink.onMessage.first);
-    });
-    responseCollector.wait().then((MessageList message) {
-      _testFilesListResponseCache = new TestList();
-      message.messages.forEach((m) => _testFilesListResponseCache.consoleTestFiles.add(m));
+      consoleResponseCollector.addSubRequest(testFileRequest, messageSink.onMessage.first);
     });
 
+    consoleResponseCollector.wait().then((MessageList message) {
+      message.messages.forEach((ConsoleTestFile m) {
+        if(m.hasTests) {
+          _testFilesListResponseCache.consoleTestFiles.add(m);
+        }
+      });
+      print(message.toJson());
+    });
+
+    var htmlResponseCollector = new ResponseCollector(testListRequest);
     testFiles.htmlTestFiles.forEach((e, f) {
+//    var key = testFiles.htmlTestFiles.keys.first;
+//    var value = testFiles.htmlTestFiles[key];
+//    <io.File,io.File>{key: value}.forEach((e, f) {
       // TODO(zoech) handle HTML tests
       // can't be run in isolates, needs content_shell
       // response.htmlTestFiles.add(new HtmlTestFile()..path = e.path);
+      var testFileRequest = new TestFileRequest()
+        ..path = e.path;
+      var browserLauncher = new CommandLauncher(e, CommandLauncher.BROWSER_COMMAND, f);
+      var messageSink = new StreamMessageSink();
+      browserLauncher.processRequest(testFileRequest, messageSink: messageSink);
+      htmlResponseCollector.addSubRequest(testFileRequest, messageSink.onMessage.first);
     });
+
+    htmlResponseCollector.wait().then((MessageList message) {
+      message.messages.forEach((m) {
+        if(m.hasTests) {
+          _testFilesListResponseCache.htmlTestFiles.add(m);
+        }
+      });
+      print(message.toJson());
+    });
+
   }
 
   Map<String,FileTestsResult> _runFileTestsResponseCache = {};
@@ -146,15 +174,26 @@ class TestrunnerServer {
    */
   void _runFileTestsRequestHandler(io.WebSocket socket,
                                   RunFileTestsRequest clientRequest) {
+    bool isHtmlTest = false;
     var tf = testFiles.consoleTestFiles.where(
                 (ctf) => ctf.path == clientRequest.path);
+    if(tf.length == 0) {tf = testFiles.htmlTestFiles.keys.where(
+            (ctf) => ctf.path == clientRequest.path);
+      isHtmlTest = true;
+    }
     if(tf.length == 0) {
       // TODO(zoechi) add errors to regular responses
       socket.add((new ErrorMessage()
           ..responseId = clientRequest.messageId
           ..errorMessage = 'Testfile "${clientRequest.path}" not found.').toJson());
     } else {
-      var commandLauncher = new CommandLauncher(tf.first, CommandLauncher.PROCESS_COMMAND);
+      var commandType;
+      if(isHtmlTest) {
+        commandType = CommandLauncher.BROWSER_COMMAND;
+      } else {
+        commandType = CommandLauncher.PROCESS_COMMAND;
+      }
+      var commandLauncher = new CommandLauncher(tf.first, commandType);
 
       var messageSink = new StreamMessageSink((message) {
         if(message is FileTestsResult) {
@@ -191,9 +230,13 @@ class TestrunnerServer {
       if(response is MessageList && response.timedOut == false) {
         response.messages.forEach((Message m) {
           if(m is ConsoleTestFile) {
-            clientResponse.consoleTestFiles.add(m);
-          } else if(Message is HtmlTestFile) {
-            clientResponse.htmlTestFiles.add(m);
+            if(m.hasTests) {
+              clientResponse.consoleTestFiles.add(m);
+            }
+          } else if(m is HtmlTestFile && m.hasTests) {
+            if(m.hasTests) {
+              clientResponse.htmlTestFiles.add(m);
+            }
           } else {
             throw 'Unsupported messagetype "${response.messageType}".';
           }
@@ -206,23 +249,23 @@ class TestrunnerServer {
 
     testFiles.consoleTestFiles.forEach((e) {
       var commandLauncher = new CommandLauncher(e, CommandLauncher.ISOLATE_COMMAND);
-
       var isolateRequest = new TestFileRequest()
           ..path = e.path;
-
       responseCollector.addSubRequest(isolateRequest, new ResponseCompleter(isolateRequest, commandLauncher.onReceive).future);
-
       commandLauncher.processRequest(isolateRequest);
-//      .then((IsolateLauncher l) {
-//        l.send(isolateRequest);
-//      });
-
     });
 
     testFiles.htmlTestFiles.forEach((e, f) {
       // TODO(zoech) handle HTML tests
       // can't be run in isolates, needs content_shell
       // response.htmlTestFiles.add(new HtmlTestFile()..path = e.path);
+
+      var commandLauncher = new CommandLauncher(e, CommandLauncher.BROWSER_COMMAND);
+      var isolateRequest = new TestFileRequest()
+        ..path = e.path;
+      responseCollector.addSubRequest(isolateRequest, new ResponseCompleter(isolateRequest, commandLauncher.onReceive).future);
+      commandLauncher.processRequest(isolateRequest);
+
     });
 
     responseCollector.wait();

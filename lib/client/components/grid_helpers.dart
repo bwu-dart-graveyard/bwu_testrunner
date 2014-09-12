@@ -2,6 +2,8 @@ library bwu_testrunner.client.grid_helpers;
 
 import 'dart:async' as async;
 import 'dart:html' as dom;
+import 'dart:convert' show HtmlEscape;
+import 'package:core_elements/core_icon.dart';
 import 'package:bwu_datagrid/bwu_datagrid.dart';
 import 'package:bwu_datagrid/dataview/dataview.dart';
 import 'package:bwu_datagrid/core/core.dart' as core;
@@ -26,8 +28,28 @@ List<Column> columns = [
     new Column(id: "test", name: "Test", field: "test", width: 350, minWidth: 50, cssClass: "cell-title", sortable: true /*, editor: new ed.TextEditor()*/),
     new Column(id: "startTime", name: "Start", field: "startTime", width: 55, sortable: true, formatter: new StartTimeFormatter()),
     new Column(id: "runningTime", name: "Duration", field: "runningTime", width: 55, sortable: true, formatter: new DurationFormatter(), groupTotalsFormatter: new DurationSumTotalsFormatter()),
-    new Column(id: "message", name: "Message", field: "message", width: 5000, sortable: false),
+    new Column(id: "message", name: "Message", field: "message", cssClass: 'allow-tooltip', width: 500, sortable: false, formatter: new MessageFormatter()),
 ];
+
+class PaperCheckboxSelectionFormatter extends CheckboxSelectionFormatter {
+  PaperCheckboxSelectionFormatter(CheckboxSelectColumn selectColumn) : super(selectColumn);
+  @override
+  void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
+    target.children.clear();
+
+    if (dataContext != null) {
+      var element = (new dom.Element.tag('core-icon') as CoreIcon)
+          ..attributes['selectColumn'] = 'true'
+          ..attributes['icon'] = 'fa:square-o';
+      if(selectColumn.isRowSelected(row)) {
+        element
+          ..classes.add('selected')
+          ..attributes['icon'] = 'fa:check-square-o';
+      }
+      target.append(element);
+    }
+  }
+}
 
 CheckboxSelectColumn checkboxColumn = new CheckboxSelectColumn(cssClass: 'bwu-datagrid-cell-checkboxsel');
 
@@ -45,14 +67,13 @@ async.Future initGrid() {
       inlineFilters: true
   ));
 
+  checkboxColumn.formatter = new PaperCheckboxSelectionFormatter(checkboxColumn);
   columns.insert(0, checkboxColumn);
 
   return grid.setup(dataProvider: dataView, columns: columns, gridOptions: gridOptions).then((_) {
     grid.registerPlugin(new GroupItemMetadataProvider());
     grid.setSelectionModel = (new RowSelectionModel(new RowSelectionModelOptions(selectActiveRow: false)));
     grid.registerPlugin(checkboxColumn);
-
-
 
     BwuColumnPicker columnPicker = (new dom.Element.tag('bwu-column-picker') as BwuColumnPicker)
       ..columns = columns
@@ -124,7 +145,7 @@ class DurationSumTotalsFormatter extends core.GroupTotalsFormatter {
       val = totals['sum'][columnDef.field];
     }
     if (val != null) {
-      target.appendHtml("${formatDuration(val)}");
+      target.appendHtml('${formatDuration(val)}');
     } else {
       target.children.clear();
     }
@@ -135,6 +156,11 @@ class DurationAggregator extends Aggregator {
   String _field;
   Duration _sum = new Duration(seconds: 0);
   DurationAggregator(this._field);
+
+  @override
+  void init() {
+    _sum = new Duration(seconds: 0);
+  }
 
   @override
   void accumulate(core.ItemBase item) {
@@ -168,6 +194,19 @@ String formatDuration(Duration value) {
     return '${minutes}:${timePartFormatter.format(seconds)}.${msFormatter.format(ms)}';
   } else {
     return value.toString();
+  }
+}
+
+class MessageFormatter extends fm.Formatter {
+  void call(dom.HtmlElement target, int row, int cell, dynamic value, Column columnDef, DataItem dataContext) {
+    String val = value == null ? '' : new HtmlEscape().convert(value.toString());
+    var intro = val.length < 150 ? val : val.substring(0,150);
+    val = val.replaceAll('\n', '<br>').replaceAll(' ', '&nbsp;');
+    if(val.isNotEmpty) {
+      target.appendHtml('<core-tooltip position="left"><span tip>${val}</span><span>${intro}</span></core-tooltip>');
+    } else {
+      target.appendHtml(val);
+    }
   }
 }
 
@@ -248,7 +287,8 @@ GroupingInfo _groupByFile() {
       ],
       doAggregateCollapsed: true,
       isLazyTotalsCalculation: true,
-      isDisplayTotalsRow: true
+      isDisplayTotalsRow: true,
+      doAggregateChildGroups: true
   );
 }
 
@@ -259,9 +299,11 @@ GroupingInfo _groupByTestGroup() {
       aggregators: [
 //        new AvgAggregator("percentComplete"),
 //        new SumAggregator("cost")
+          new DurationAggregator("runningTime")
       ],
       doAggregateCollapsed: true,
-      isLazyTotalsCalculation: true
+      isLazyTotalsCalculation: true,
+      doAggregateChildGroups: true
   );
 }
 
@@ -288,9 +330,11 @@ GroupingInfo _groupByResult() {
       aggregators: [
 //        new AvgAggregator("percentComplete"),
 //        new SumAggregator("cost")
+          new DurationAggregator("runningTime")
       ],
       doAggregateCollapsed: true,
-      isLazyTotalsCalculation: true
+      isLazyTotalsCalculation: true,
+      doAggregateChildGroups: true
   );
 }
 
@@ -312,6 +356,7 @@ void groupByResult(DataView dataView) {
 String sortCol = "title";
 int sortDir = 1;
 
+// for DataView sort TODO(zoechi) try to make the comparer included in BWU_Datagrid reusable or check if it is
 int comparer(DataItem a, DataItem b) {
   var x = a[sortCol], y = b[sortCol];
   if (x == y) return 0;
@@ -325,4 +370,6 @@ int comparer(DataItem a, DataItem b) {
   if (x is bool) return x == true ? 1 : 0;
   return (x == y ? 0 : (x > y ? 1 : -1));
 }
+
+
 

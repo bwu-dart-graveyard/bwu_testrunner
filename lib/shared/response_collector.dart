@@ -87,7 +87,16 @@ class ResponseCollector {
   /// Handle timeout - send Timeout response message.
   void _timeoutHandler() {
     _cleanup();
-    completer.complete(request.timedOutResponse());
+    var response = new MessageList()
+      ..responseId = request.messageId
+      ..messages.addAll(results.values);
+
+    _subRequests.forEach((k, v) {
+      if(results.containsKey(k)) {
+        response.messages.add(k.timedOutResponse());
+      }
+    });
+    completer.complete(response);
   }
 
   /// Stop waiting for and processing of any arriving messages.

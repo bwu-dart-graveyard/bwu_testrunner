@@ -297,21 +297,30 @@ class TestFileRequest extends Request {
 
 // A common base class for console and HTML test files.
 // A concrete instance of this type must only be used for a TimeOut response.
-class TestFile extends Response {
+abstract class TestFile extends Response {
   static const MESSAGE_TYPE = 'TestFile';
-}
-
-/// The response to a TestFileRequest with details about the tests found in that file.
-class ConsoleTestFile extends TestFile {
-
-  static const MESSAGE_TYPE = 'ConsoleTestFile';
-  String get messageType => MESSAGE_TYPE;
 
   String path;
   final List<TestGroup> groups = [];
   final List<Test> tests = [];
 
-  ConsoleTestFile() : super();
+  bool get hasTests {
+    if(tests.length > 0) return true;
+    return _hasTests(groups);
+  }
+
+  _hasTests(List<TestGroup> groups) {
+    bool found = false;
+    if(groups != null) {
+      groups.forEach((g) {
+        if(!found) {
+          if (g.tests.length > 0) found = true;
+          if (_hasTests(g.groups)) found = true;
+        }
+      });
+    }
+    return found;
+  }
 
   @override
   void fromMap(Map map) {
@@ -328,6 +337,15 @@ class ConsoleTestFile extends TestFile {
       ..['groups'] = groups.map((g) => g.toMap()).toList()
       ..['tests'] = tests.map((t) => t.toMap()).toList();
   }
+}
+
+/// The response to a TestFileRequest with details about the tests found in that file.
+class ConsoleTestFile extends TestFile {
+
+  static const MESSAGE_TYPE = 'ConsoleTestFile';
+  String get messageType => MESSAGE_TYPE;
+
+  ConsoleTestFile() : super();
 }
 
 /// The response to a TestFileRequest with details about the tests found in that file.

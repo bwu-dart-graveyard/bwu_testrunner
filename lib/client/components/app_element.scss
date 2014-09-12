@@ -4,7 +4,8 @@ $selected-radio-button-color:$button-icon-color;
 
 $header-background-color:#f5f5f5;
 $grid-border-color:#d8d8d8;
-$caption-color:#333333;
+$grid-text-color:#333;
+$caption-color: $grid-text-color;
 
 $row-border-color:#eee;
 $odd-row-background-color:#fcfcfc;
@@ -30,7 +31,7 @@ $fail-icon-color:red;
 * /deep/ * {
   font-family: arial, sans-serif;
   font-size: 8pt;
-  color: #333;
+  color: $grid-text-color;
 }
 
 /* wrap grid and pager
@@ -54,7 +55,7 @@ div.grid-wrapper  {
 
   /deep/ {
     .bwu-datagrid-cell {
-       // nothing yet
+      // nothing yet
     }
 
     /* group headers */
@@ -73,7 +74,6 @@ div.grid-wrapper  {
         font-style: italic;
       }
     }
-
 
     /* result icons */
     core-icon {
@@ -105,9 +105,12 @@ div.grid-wrapper  {
 
     /* grid header
     ----------------------------------*/
-    #headerScroller.bwu-datagrid-header {
-      border: none;
-      background: none;
+    #headerScroller {
+      &.bwu-datagrid-header {
+        border: none;
+        background: none;
+        background-color: $header-background-color;
+      }
     }
 
     #bwuDatagridHeaders.bwu-datagrid-header-columns {
@@ -138,7 +141,7 @@ div.grid-wrapper  {
     ----------------------------------*/
     .bwu-datagrid-row {
       border: solid $row-border-color;
-      border-width: 1px 0 1px 0;
+      border-width: 1px 1px 1px 0;
       background: none; // TODO(zoechi) override default style
 
       &.even {
@@ -183,6 +186,34 @@ div.grid-wrapper  {
             border-left-color: $active-selected-row-background-color;
           }
         }
+      }
+    }
+
+    .bwu-datagrid-cell-checkboxsel {
+      core-icon {
+        fill: $grid-border-color;
+        width: $result-icon-size;
+        height: $result-icon-size;
+
+        &.selected {
+          fill: gray;
+        }
+      }
+    }
+
+    .bwu-datagrid-group-toggle {
+      &.expanded {
+
+      }
+    }
+
+    .allow-tooltip {
+      overflow: visible;
+
+      [tip] {
+        color: white;
+        font-family: monospace;
+        line-height: 15px;
       }
     }
   }

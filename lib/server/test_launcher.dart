@@ -149,6 +149,7 @@ class _IsolateCommand {
         print('Isolate for "${_testFile.path} launched');
         _launchCompleter.complete(this);
       } else {
+        print('Message from isolate "${message.toJson()}');
         //var message = new Message.fromJson(e);
         if (message is StopIsolateRequest) {
           //invalidateIsolate();
@@ -248,14 +249,14 @@ void main(List<String> args, SendPort replyTo) {
 
 
 /**
- *  Launches a new isolate instance to process a single command.
+ *  Launches a new process to process a single command.
  */
 class _ProcessCommand {
-  /// The port to receive messages of the launched isolate.
+  /// The port to receive messages of the launched process.
   //ReceivePort _response = new ReceivePort();
   final io.File _testFile;
 
-  /// The port to send messages to the launched isolate.
+  /// The port to send messages to the launched process.
   _ProcessMessageServer _sendPort;
 
   /// Message handler of the caller.
@@ -298,12 +299,12 @@ class _ProcessCommand {
     return _commandCompleter.future;
   }
 
-  /// [_launchCompleter] completes when the isolate is ready to receive messages.
+  /// [_launchCompleter] completes when the process is ready to receive messages.
   async.Completer _launchCompleter = new async.Completer();
 
   /// Launches the isolate when it is not yet running.
   async.Future _launch() {
-    print('Launch isolate for "${_testFile.path}');
+    print('Launch process for "${_testFile.path}');
 
     io.File main;
     io.Directory tmpDir;
@@ -385,37 +386,185 @@ void main(List<String> args) {
 
 
 /**
+ *  Launches a new browser instance to process a single command.
+ */
+class _BrowserCommand {
+  /// The port to receive messages of the launched browser.
+  //ReceivePort _response = new ReceivePort();
+  final io.File _testFileDart;
+  final io.File _testFileHtml;
+
+  /// The port to send messages to the launched browser.
+  _ProcessMessageServer _sendPort;
+
+  /// Message handler of the caller.
+  MessageSink _responseHandler;
+
+  /// completed when the command execution is finished.
+  async.Completer _commandCompleter;
+  var messageList = new MessageList();
+
+  _BrowserCommand(this._testFileDart, this._testFileHtml, this._responseHandler);
+
+  async.Future _initServer() {
+    return _ProcessMessageServer.getServer()
+    .then((server) {
+      _sendPort = server;
+      _sendPort.onMessage.listen((message) {
+        print('Message from browser: $message');
+        //var message = new Message.fromJson(e);
+        if (message is StopIsolateRequest) {
+          //invalidateIsolate();
+          //_commandCompleter.complete(true);
+          //_sendPort.release();
+        } else {
+          messageList.messages.add(message);
+          _responseHandler(message);
+        }
+      });
+    });
+  }
+
+  /// Launch a new browser, send the request to message to the isolate and
+  /// complete the _commandCompleter when the StopRequestRequest message was
+  /// sent by the isolate.
+  async.Future processRequest(Message message) {
+    _commandCompleter = new async.Completer();
+    _initServer()
+    .then((_) {
+      _sendPort.onClientConnect.first.then( (_) => _sendPort.send(message))
+      .catchError((e) {
+        print('_sendPort.first: $e, $message');
+        // TODO(zoechi) error handling for failing tests
+      });
+      _launch();
+    });
+    return _commandCompleter.future;
+  }
+
+  /// [_launchCompleter] completes when the isolate is ready to receive messages.
+  async.Completer _launchCompleter = new async.Completer();
+
+  /// Launches the isolate when it is not yet running.
+  async.Future _launch() {
+    print('Launch browser for "${_testFileHtml.path}');
+
+//    io.File main;
+//    io.Directory tmpDir;
+//    io.Directory workingDir = new io.Directory(path.dirname(_testFile.path));
+//    var tmpMainName = path.join(workingDir.path, '.tmp_bwu_testrunner_${Message.UUID.v4()}.dart');
+//
+//    main = new io.File(tmpMainName);
+//    main.writeAsString(_mainContent(_testFile), flush: true)
+//    .then((_) {
+      print('Test file: ${_testFileHtml.path}');
+//      var uri = Uri.parse('file://${main.absolute.path}');
+
+      var htmlFileUrl = path.joinAll(path.split(_testFileHtml.path).sublist(1));
+      io.Process.start('content_shell', ['--dump-render-tree', 'http://localhost:8081/${htmlFileUrl}?file=${_testFileDart.path}&host=127.0.0.1&port=${_sendPort.port}'])
+      //return Isolate.spawnUri(uri, [_testFile.path], _response.sendPort)
+      .then((process) {
+        process.stderr.listen((d) => print('prc err: ${UTF8.decoder.convert(d)}'));
+        process.stdout.listen((d) => print('prc: ${UTF8.decoder.convert(d)}'));
+        //_isolate = isolate;
+        // TODO(zoechi) not yet supported _isolate.errors.listen((e) => print('Isolate error: $e'));
+        // not supported isolate.addOnExitListener(_sendPort);
+        //_launchCompleter.complete(true);
+        //return deleteMain(main);
+        process.exitCode.then((_) {
+//          deleteMain(main);
+          if(_sendPort != null) _sendPort.release();
+          _commandCompleter.complete(true);
+        });
+        return this;
+      })
+//      .catchError((e) => deleteMain(main));
+//    })
+//    .then((_) {
+//      return deleteMain(main)
+//      .then((_) => this);
+//      return this;
+//    })
+    .catchError((e, s) {
+//      print('$e\n$s');
+//      deleteMain(main)
+//      .then((_) {
+        //_isolateId = null;
+        if(!_launchCompleter.isCompleted) {
+          _launchCompleter.completeError(e);
+        }
+        if (_commandCompleter != null && !_commandCompleter.isCompleted) {
+          _commandCompleter.completeError(e);
+        }
+        _commandCompleter = null;
+      //});
+    });
+    return _launchCompleter.future;
+  }
+
+  // delete temporary main
+  async.Future deleteMain(io.File main) {
+    return main.exists()
+    .then((exists) {
+      if(exists) {
+        return main.delete(recursive: true);
+      } else {
+        return new async.Future.value();
+      }
+    });
+  }
+
+
+  /// The template for the main method used to launch the isolate.
+  /// The reference to the test file is added as a library import.
+//  String _mainContent(io.File testFile) {
+//    return '''
+//import 'dart:isolate';
+//import '${testFile.absolute.path}' as tf1__;
+//import 'package:bwu_testrunner/server/process_testrunner.dart';
+//void main(List<String> args) {
+//  new ProcessTestrunner(tf1__.main, args);
+//}
+//''';
+//  }
+}
+
+
+/**
  * Manages and launches an isolates to process commands for a specific test file.
  */
 class CommandLauncher {
   static const ISOLATE_COMMAND = 0;
   static const PROCESS_COMMAND = 1;
+  static const BROWSER_COMMAND = 2;
 
   // String stores the absolute path of the associated test file
   static final Map<String,Map<int,CommandLauncher>> _launcher = {};
 
   /// Create a new instance or return an existing one.
-  factory CommandLauncher(io.File file, int commandType) {
-    var launcherMap = _launcher[file.absolute.path];
+  factory CommandLauncher(io.File fileDart, int commandType, [io.File fileHtml = null]) {
+    var launcherMap = _launcher[fileDart.absolute.path];
     var launcher;
     if(launcherMap != null) {
       launcher = launcherMap[commandType];
     }
     if(launcher == null) {
-      launcher = new CommandLauncher._(file, commandType);
+      launcher = new CommandLauncher._(fileDart, commandType, fileHtml);
     }
     return launcher;
   }
 
   /// The test file this isolate was created for.
-  final io.File testFile;
+  final io.File testFileDart;
+  final io.File testFileHtml;
+
   final int commandType;
 
-  CommandLauncher._(this.testFile, this.commandType) {
-    if(_launcher[testFile.absolute.path] == null) {
-      _launcher[testFile.absolute.path] = {};
+  CommandLauncher._(this.testFileDart, this.commandType, [this.testFileHtml = null]) {
+    if(_launcher[testFileDart.absolute.path] == null) {
+      _launcher[testFileDart.absolute.path] = {};
     }
-    _launcher[testFile.absolute.path][commandType] = this;
+    _launcher[testFileDart.absolute.path][commandType] = this;
   }
 
   /// Allows to invalidate an isolate for a test file without a concrete
@@ -461,11 +610,15 @@ class CommandLauncher {
     var cmd;
     switch(commandType) {
       case CommandLauncher.ISOLATE_COMMAND:
-        cmd = new _IsolateCommand(testFile, messageHandler);
+        cmd = new _IsolateCommand(testFileDart, messageHandler);
         break;
 
       case CommandLauncher.PROCESS_COMMAND:
-        cmd = new _ProcessCommand(testFile, messageHandler);
+        cmd = new _ProcessCommand(testFileDart, messageHandler);
+        break;
+
+      case CommandLauncher.BROWSER_COMMAND:
+        cmd = new _BrowserCommand(testFileDart, testFileHtml, messageHandler);
         break;
     }
     return cmd.processRequest(message);

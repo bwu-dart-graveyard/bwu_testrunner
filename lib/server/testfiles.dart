@@ -9,7 +9,8 @@ import 'package:bwu_testrunner/shared/message.dart';
 class TestFiles {
 
   static final scriptFileRegexp = new RegExp(r'''(?:.*<script .*?src=(["']))([a-zA-Z0-9\._-]*?.dart)(?:\1>.*)''');
-  static final mainWithUnitTest = new RegExp(r'''(?:[\s\S]*import\s(["']))(package:unittest/unittest.dart\1)(?:[\s\S])+?(void main\(|main\()(?:[\s\S])+''');
+  //static final mainWithUnitTest = new RegExp(r'''(?:[\s\S]*import\s(["']))(package:unittest/unittest.dart\1)(?:[\s\S])+?.*?(void main\(|main\()(?:[\s\S])+''');
+  static final mainWithUnitTest = new RegExp(r'''(?:[\s\S]*?\s*?)(import\s["']package:unittest/unittest.dart\1)(?:[\s\S]*?)((void )+main\((?:[\s\S]*?)\)(?:[\s\S]*?){)''');
 
   final io.Directory testDirectory;
 
@@ -76,12 +77,12 @@ class TestFiles {
       var scriptName = match.group(2);
       //scriptName = scriptName.substring(scriptName.length - 1);
       if(match != null) {
-        //print('Found script file name "${scriptName}" in "${f.path}".');
+//        print('Found script file name "${scriptName}" in "${f.path}".');
         var scriptFile = new io.File(path.join(path.dirname(f.path), scriptName));
-        //print('"${scriptFile.path}" exists: ${scriptFile.existsSync()}');
+//        print('"${scriptFile.path}" exists: ${scriptFile.existsSync()}');
         if(mainWithUnitTest.firstMatch(scriptFile.readAsStringSync()) != null) {
-          //print('"${scriptFile.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
-          //print('Add "${scriptFile.path}" to HTML tests (associated with "${f.path}".');
+//          print('"${scriptFile.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
+//          print('Add "${scriptFile.path}" to HTML tests (associated with "${f.path}".');
           htmlTestFiles[scriptFile]=f;
           htmlTestFilesPath[scriptFile.absolute.path] = 1;
           print('Html: ${f.path}');
@@ -91,8 +92,8 @@ class TestFiles {
     files.where((f) => f is io.File && path.extension(f.path) == '.dart' && !htmlTestFilesPath.containsKey(f.absolute.path))
     .forEach((f) {
       if(mainWithUnitTest.firstMatch(f.readAsStringSync()) != null) {
-        //print('"${f.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
-        //print('Add "${f.path}" to console tests.');
+        print('"${f.path}" imports "package:unittest/unittest.dart" and has a "main" method.');
+        print('Add "${f.path}" to console tests.');
         consoleTestFiles.add(f);
         print('Console: ${f.path}');
       }

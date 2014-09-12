@@ -56,7 +56,7 @@ class Client {
           item['startTime'] = r.startTime;
           item['runningTime'] = r.runningTime;
           item['startTime'] = r.startTime;
-          item['message'] = item['message'] == null ? r.message : item['message'] + r.message;
+          item['message'] = item['message'] = r.message; // TODO(zoechi) ensure that all output is contained in the message of the TestResult //== null ? r.message : item['message'] + r.message;
           dataView.updateItem(item['id'], item);
         }
       });
@@ -83,7 +83,7 @@ class Client {
 
 
   /// Add the information from a single test file to the grid.
-  _addTestFile(ConsoleTestFile f) {
+  _addTestFile(TestFile f) {
     f.tests.forEach((t) => _addTest(f.path, null, t));
     f.groups.forEach((g) => _addGroup(f.path, null, g));
     //grid.render();
@@ -95,6 +95,10 @@ class Client {
     dataView.beginUpdate();
     dataView.items.clear();
     response.consoleTestFiles.forEach((f) {
+      _addTestFile(f);
+    });
+
+    response.htmlTestFiles.forEach((f) {
       _addTestFile(f);
     });
 

@@ -50,20 +50,24 @@ class IsolateTestrunner {
 
     switch(message.messageType) {
       case StopIsolateRequest.MESSAGE_TYPE:
+        print('isolate exit');
         _exit();
         break;
 
       case TestFileRequest.MESSAGE_TYPE:
+        print('isolate test file request start');
         _checkIsUsed();
+        print('isolate test file request 1');
         _fileTestListRequestHandler(message);
+        print('isolate test file request end');
         break;
 
       case RunFileTestsRequest.MESSAGE_TYPE:
         _checkIsUsed();
         _runFileTestsRequestHandler(message);
+        print('isolate run test');
         break;
     }
-    //print('child isolate - message "${msg.messageType}" received: $json');
   }
 
   /// One isolate can only execute one command (UnitTest library limitation)
@@ -125,49 +129,54 @@ class IsolateTestrunner {
   /// Invokes main and retrieves test methods and groups from the unit test
   /// configuration.
   void _fileTestListRequestHandler(TestFileRequest msg) {
+    print('fileTestListRequestHandler');
+    assert(msg.messageId != null);
+    assert(msg.path != null);
     var response = new ConsoleTestFile()
         ..responseId = msg.messageId
         ..path = msg.path;
 
+    print('fileTestListRequestHandler 2');
     _config.getTests().then((tests) {
 
-        tests.forEach((tc) {
-          print('Test found: ${tc.description}');
-          var names = tc.description.split(ut.groupSep);
-          var test = new Test()
-              ..name = names.last
-              ..id = tc.id;
-          if(names.length > 1) {
-            TestGroup root;
-            TestGroup parentGroup;
-            while(names.length > 1) {
-              var tmpGroup = new TestGroup()..name = names[0];
-              names.removeAt(0);
-              if(root == null) {
-                root = tmpGroup;
-                var found = response.groups.where((g) => g.name == tmpGroup.name);
-                if(found.isEmpty) {
-                  parentGroup = root;
-                  response.groups.add(root);
-                } else {
-                  root = found.first;
-                  parentGroup = root;
-                }
+      assert(tests != null);
+      tests.forEach((tc) {
+        print('Test found: ${tc.description}');
+        var names = tc.description.split(ut.groupSep);
+        var test = new Test()
+            ..name = names.last
+            ..id = tc.id;
+        if(names.length > 1) {
+          TestGroup root;
+          TestGroup parentGroup;
+          while(names.length > 1) {
+            var tmpGroup = new TestGroup()..name = names[0];
+            names.removeAt(0);
+            if(root == null) {
+              root = tmpGroup;
+              var found = response.groups.where((g) => g.name == tmpGroup.name);
+              if(found.isEmpty) {
+                parentGroup = root;
+                response.groups.add(root);
               } else {
-                var found = parentGroup.groups.where((g) => g.name == tmpGroup.name);
-                if(found.isEmpty) {
-                  parentGroup.groups.add(tmpGroup);
-                  parentGroup = tmpGroup;
-                } else {
-                  parentGroup = found.first;
-                }
+                root = found.first;
+                parentGroup = root;
+              }
+            } else {
+              var found = parentGroup.groups.where((g) => g.name == tmpGroup.name);
+              if(found.isEmpty) {
+                parentGroup.groups.add(tmpGroup);
+                parentGroup = tmpGroup;
+              } else {
+                parentGroup = found.first;
               }
             }
-            parentGroup.tests.add(test);
-          } else {
-            response.tests.add(test);
           }
-        });
+          parentGroup.tests.add(test);
+        } else {
+          response.tests.add(test);
+        }
+      });
       _send(response);
       _exit();
     });
